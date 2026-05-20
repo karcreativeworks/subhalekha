@@ -1,3 +1,6 @@
+import { unstable_noStore as noStore } from "next/cache"
+import { cache } from "react"
+
 import type {
   Event,
   EventPublic,
@@ -150,7 +153,8 @@ export async function getPublicMediaForGalleryBlock(
 }
 
 /** All public events for site navigation (newest event date first). */
-export async function getPublicEventsList(): Promise<EventPublic[]> {
+export const getPublicEventsList = cache(async (): Promise<EventPublic[]> => {
+  noStore()
   if (!isPublicDbConfigured()) return []
 
   const db = await getDb()
@@ -161,7 +165,7 @@ export async function getPublicEventsList(): Promise<EventPublic[]> {
     .toArray()
 
   return docs.map(toEventPublic)
-}
+})
 
 /** First event slug for the homepage link helper. */
 export async function getFirstPublicEventSlug(): Promise<string | null> {

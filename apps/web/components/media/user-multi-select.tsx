@@ -38,8 +38,8 @@ export function UserMultiSelect({
     const query = search.toLowerCase()
     return users.filter(
       (user) =>
-        user.displayName.toLowerCase().includes(query) ||
-        user.id.toLowerCase().includes(query),
+        (user.displayName ?? user.id ?? "").toLowerCase().includes(query) ||
+        (user.id ?? "").toLowerCase().includes(query),
     )
   }, [users, search])
 
@@ -127,7 +127,8 @@ export function UserMultiSelect({
             const exact = users.find(
               (user) =>
                 user.id === search.trim().toLowerCase() ||
-                user.displayName.toLowerCase() === search.trim().toLowerCase(),
+                (user.displayName ?? "").toLowerCase() ===
+                  search.trim().toLowerCase(),
             )
             if (exact) {
               toggleUser(exact.id)
@@ -172,7 +173,7 @@ export function UserMultiSelect({
       {search.trim() &&
       !users.some(
         (user) =>
-          user.displayName.toLowerCase() === search.trim().toLowerCase() ||
+          (user.displayName ?? "").toLowerCase() === search.trim().toLowerCase() ||
           user.id === search.trim().toLowerCase(),
       ) ? (
         <Button

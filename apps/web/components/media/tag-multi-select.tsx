@@ -35,8 +35,8 @@ export function TagMultiSelect({
     const query = search.toLowerCase()
     return tags.filter(
       (tag) =>
-        tag.displayName.toLowerCase().includes(query) ||
-        tag.id.toLowerCase().includes(query),
+        (tag.displayName ?? tag.id ?? "").toLowerCase().includes(query) ||
+        (tag.id ?? "").toLowerCase().includes(query),
     )
   }, [tags, search])
 
@@ -113,7 +113,8 @@ export function TagMultiSelect({
             const exact = tags.find(
               (tag) =>
                 tag.id === search.trim().toLowerCase() ||
-                tag.displayName.toLowerCase() === search.trim().toLowerCase(),
+                (tag.displayName ?? "").toLowerCase() ===
+                  search.trim().toLowerCase(),
             )
             if (exact) {
               toggleTag(exact.id)
@@ -154,7 +155,7 @@ export function TagMultiSelect({
       {search.trim() &&
       !tags.some(
         (tag) =>
-          tag.displayName.toLowerCase() === search.trim().toLowerCase() ||
+          (tag.displayName ?? "").toLowerCase() === search.trim().toLowerCase() ||
           tag.id === search.trim().toLowerCase(),
       ) ? (
         <Button

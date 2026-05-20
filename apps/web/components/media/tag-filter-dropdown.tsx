@@ -34,8 +34,8 @@ export function TagFilterDropdown({
     const query = search.toLowerCase()
     return tags.filter(
       (tag) =>
-        tag.displayName.toLowerCase().includes(query) ||
-        tag.id.toLowerCase().includes(query),
+        (tag.displayName ?? tag.id ?? "").toLowerCase().includes(query) ||
+        (tag.id ?? "").toLowerCase().includes(query),
     )
   }, [tags, search])
 
