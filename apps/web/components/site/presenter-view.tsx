@@ -22,6 +22,7 @@ import type { MediaFile } from "@/app/types/media"
 import { Dialog, DialogPortal } from "@/components/ui/dialog"
 import { getMediaImageUrl } from "@/lib/media/cloudflare-image"
 import { cn } from "@workspace/ui/lib/utils"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
 const MIN_SCALE = 1
 const MAX_SCALE = 4
@@ -69,8 +70,8 @@ export interface PresenterViewProps {
 
 function getPresenterFullUrl(file: MediaFile) {
   return (
-    getMediaImageUrl(file, "large") ||
     getMediaImageUrl(file, "original") ||
+    getMediaImageUrl(file, "large") ||
     getMediaImageUrl(file, "medium") ||
     file.filePath ||
     ""
@@ -129,7 +130,8 @@ function PresenterSlide({
   animateTransform,
   slideWidthPercent,
 }: PresenterSlideProps) {
-  const fullSrc = getPresenterFullUrl(photo)
+  const isMobile = useMediaQuery("(max-width: 768px)")
+  const fullSrc = isMobile ? getMediaImageUrl(photo, "medium") : getPresenterFullUrl(photo)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {

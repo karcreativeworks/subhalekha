@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 
 import type { MediaFile } from "@/app/types/media"
 import { glassPanel } from "@/components/site/glass"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import { getMediaImageUrl } from "@/lib/media/cloudflare-image"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -23,6 +24,8 @@ export function PublicPhotoGrid({
   className,
 }: PublicPhotoGridProps) {
   const [numColumns, setNumColumns] = useState(2)
+
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   useEffect(() => {
     const getColumns = () => {
@@ -84,10 +87,10 @@ export function PublicPhotoGrid({
             const id = getFileId(file)
             const flatIndex = id ? flatIndexById.get(id) : undefined
             const src =
-              getMediaImageUrl(file, "medium") ||
-              getMediaImageUrl(file, "thumbnail") ||
-              file.filePath ||
-              ""
+              isMobile ? getMediaImageUrl(file, "thumbnail") : getMediaImageUrl(file, "medium") ||
+                getMediaImageUrl(file, "thumbnail") ||
+                file.filePath ||
+                ""
 
             return (
               <figure
