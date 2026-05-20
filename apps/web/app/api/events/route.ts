@@ -16,7 +16,7 @@ import { getDb } from "@/lib/db/mongodb"
 
 export async function GET(request: NextRequest) {
   try {
-    const { clientId } = await requireAdminAnyAccess([
+    await requireAdminAnyAccess([
       ADMIN_ACCESS.EVENTS_MANAGER,
       ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
     ])
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const db = await getDb()
     const events = await db
       .collection<Event>("events")
-      .find({ clientId })
+      .find({})
       .sort({ [sort]: order === "asc" ? 1 : -1 })
       .toArray()
 

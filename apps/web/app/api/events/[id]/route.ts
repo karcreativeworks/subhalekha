@@ -17,7 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
+    await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
     const { id } = await params
 
     if (!ObjectId.isValid(id)) {
@@ -27,7 +27,6 @@ export async function GET(
     const db = await getDb()
     const event = await db.collection<Event>("events").findOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
     if (!event) {

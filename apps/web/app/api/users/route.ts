@@ -6,11 +6,11 @@ import { getDb } from "@/lib/db/mongodb"
 
 export async function GET() {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    await requireAdminAccess("mediaUploader")
     const db = await getDb()
     const users = await db
       .collection<User>("users")
-      .find({ clientId })
+      .find({})
       .sort({ displayName: 1 })
       .toArray()
 

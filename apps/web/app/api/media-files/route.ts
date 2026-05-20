@@ -16,7 +16,7 @@ function escapeRegex(value: string): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const { clientId } = await requireAdminAnyAccess(MEDIA_READ_ACCESS)
+    await requireAdminAnyAccess(MEDIA_READ_ACCESS)
     const db = await getDb()
     const collection = db.collection<MediaFile>("mediaFiles")
     const { searchParams } = new URL(request.url)
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
     const q = searchParams.get("q")?.trim() ?? ""
 
-    const query: Record<string, unknown> = { clientId }
+    const query: Record<string, unknown> = {}
 
     if (tag) {
       query.tags = { $in: [tag] }

@@ -20,7 +20,7 @@ import { getDb } from "@/lib/db/mongodb"
 
 export async function GET(request: NextRequest) {
   try {
-    const { clientId } = await requireAdminAnyAccess([
+    await requireAdminAnyAccess([
       ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
       ADMIN_ACCESS.EVENTS_MANAGER,
     ])
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get("sort") || "captureDate"
     const order = searchParams.get("order") || "desc"
 
-    const query: Record<string, unknown> = { clientId }
+    const query: Record<string, unknown> = {}
     if (parentEventId) {
       query.parentEventId = parentEventId
     }
@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
     if (parentEventId && ObjectId.isValid(parentEventId)) {
       const parentEvent = await db.collection<Event>("events").findOne({
         _id: new ObjectId(parentEventId),
-        clientId,
       })
       if (parentEvent) {
         return NextResponse.json(

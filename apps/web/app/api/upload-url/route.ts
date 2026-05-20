@@ -16,7 +16,7 @@ const s3Client = new S3Client({
 
 export async function GET(req: NextRequest) {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    await requireAdminAccess("mediaUploader")
     const { searchParams } = new URL(req.url)
     const filename = searchParams.get("filename")
     const contentType = searchParams.get("contentType")
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
     const timestamp = Date.now()
     const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, "_")
-    const key = `subhalekha/${clientId.replaceAll(" ", "")}/${timestamp}-${sanitizedFilename}`
+    const key = `subhalekha/${timestamp}-${sanitizedFilename}`
 
     const command = new PutObjectCommand({
       Bucket: process.env.SPACES_BUCKET,

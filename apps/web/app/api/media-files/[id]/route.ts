@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAnyAccess(MEDIA_READ_ACCESS)
+    await requireAdminAnyAccess(MEDIA_READ_ACCESS)
     const { id } = await params
 
     if (!ObjectId.isValid(id)) {
@@ -25,7 +25,6 @@ export async function GET(
     const db = await getDb()
     const file = await db.collection<MediaFile>("mediaFiles").findOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
     if (!file) {

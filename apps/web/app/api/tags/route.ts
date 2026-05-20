@@ -7,11 +7,11 @@ import { getDb } from "@/lib/db/mongodb"
 
 export async function GET() {
   try {
-    const { clientId } = await requireAdminAnyAccess(TAG_ADMIN_ACCESS)
+    await requireAdminAnyAccess(TAG_ADMIN_ACCESS)
     const db = await getDb()
     const tags = await db
       .collection<Tag>("tags")
-      .find({ clientId })
+      .find({})
       .sort({ displayName: 1 })
       .toArray()
 

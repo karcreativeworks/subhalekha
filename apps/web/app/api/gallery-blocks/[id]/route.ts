@@ -22,9 +22,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess(
-      ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
-    )
+    await requireAdminAccess(ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER)
     const { id } = await params
 
     if (!ObjectId.isValid(id)) {
@@ -37,7 +35,6 @@ export async function GET(
     const db = await getDb()
     const block = await db.collection<GalleryBlock>("galleryBlocks").findOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
     if (!block) {
