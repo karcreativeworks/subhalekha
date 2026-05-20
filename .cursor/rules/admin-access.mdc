@@ -21,6 +21,7 @@ When adding or changing an **admin page**, **admin API route**, or **protected f
 
 3. **`apps/web/lib/auth/protected-api.ts`**
    - Register new `/api/...` path patterns so middleware requires a session.
+   - Do not protect `/api/public/...` — those routes are for the guest site without login (`isProtectedApiPath` excludes them).
 
 4. **`apps/web/middleware.ts`**
    - Add matching `matcher` entries for new API routes under `/admin` or `/api`.

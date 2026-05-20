@@ -13,10 +13,7 @@ import {
 } from "@/lib/gallery/event-block-order"
 import { toEventPublic, toGalleryBlockPublic } from "@/lib/gallery/normalize"
 import { PUBLIC_GALLERY_MEDIA_PAGE_SIZE } from "@/lib/gallery/public-media-constants"
-import {
-  getPublicClientId,
-  isPublicDbConfigured,
-} from "@/lib/site/public-client"
+import { isPublicDbConfigured } from "@/lib/site/public-client"
 import { normalizeMediaFile } from "@/lib/media/normalize-media"
 
 export { PUBLIC_GALLERY_MEDIA_PAGE_SIZE } from "@/lib/gallery/public-media-constants"
@@ -28,10 +25,8 @@ export async function getPublicEventBySlug(
     return null
   }
 
-  const clientId = getPublicClientId()
   const db = await getDb()
   const doc = await db.collection<Event>("events").findOne({
-    // clientId,
     eventSlug,
   })
 
@@ -62,13 +57,11 @@ export async function getPublicGalleryBlocksForEvent(
     return []
   }
 
-  const clientId = getPublicClientId()
   const db = await getDb()
 
   const blocks = await db
     .collection<GalleryBlock>("galleryBlocks")
     .find({
-      // clientId,
       parentEventId: event.id,
     })
     .toArray()
@@ -97,10 +90,8 @@ export async function getPublicGalleryBlock(
     return null
   }
 
-  const clientId = getPublicClientId()
   const db = await getDb()
   const doc = await db.collection<GalleryBlock>("galleryBlocks").findOne({
-    // clientId,
     parentEventId: event.id,
     galleryBlockSlug,
   })
@@ -129,10 +120,8 @@ export async function getPublicMediaForGalleryBlock(
     return { files: [], total: 0, hasMore: false, page, limit }
   }
 
-  const clientId = getPublicClientId()
   const db = await getDb()
   const query = {
-    // clientId,
     tags: { $in: block.tags },
     contentType: "image" as const,
   }
@@ -164,7 +153,6 @@ export async function getPublicMediaForGalleryBlock(
 export async function getPublicEventsList(): Promise<EventPublic[]> {
   if (!isPublicDbConfigured()) return []
 
-  const clientId = getPublicClientId()
   const db = await getDb()
   const docs = await db
     .collection<Event>("events")
