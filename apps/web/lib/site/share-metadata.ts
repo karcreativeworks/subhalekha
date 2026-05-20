@@ -6,6 +6,13 @@ import { getSiteMetadataBaseUrl } from "@/lib/site/site-url"
 
 const SITE_NAME = "Subhalekha"
 
+/** Public OG image for the site homepage (`public/landing_og_image.png`). */
+export const LANDING_OG_IMAGE_PATH = "/landing_og_image.png"
+
+function absolutePublicOgImage(path: string): string {
+  return new URL(path, getSiteMetadataBaseUrl()).href
+}
+
 /** Absolute URL suitable for og:image / twitter:image from a stored horizontal cover URL. */
 export function absoluteOgImageFromHorizontalCover(
   horizontalUrl: string | undefined
@@ -33,6 +40,36 @@ function openGraphImageEntry(
 ): Array<{ url: string }> | undefined {
   const url = absoluteOgImageFromHorizontalCover(horizontalUrl)
   return url ? [{ url }] : undefined
+}
+
+/** Site homepage — uses `landing_og_image.png`. */
+export function buildSiteHomeMetadata(): Metadata {
+  const path = "/"
+  const title = SITE_NAME
+  const description =
+    "Celebrations & memories — browse wedding galleries and event photos."
+  const ogUrl = absolutePublicOgImage(LANDING_OG_IMAGE_PATH)
+  const images = [{ url: ogUrl }]
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      siteName: SITE_NAME,
+      type: "website",
+      title,
+      description,
+      url: path,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogUrl],
+    },
+  }
 }
 
 /** Public event landing page — full event context. */
