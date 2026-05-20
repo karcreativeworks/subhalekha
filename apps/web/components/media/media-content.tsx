@@ -17,6 +17,10 @@ import type { MediaFile, Tag } from "@/app/types/media"
 import { BulkEditToolbar } from "@/components/media/bulk-edit-toolbar"
 import { MediaDetailDialog } from "@/components/media/media-detail-dialog"
 import { MediaGrid } from "@/components/media/media-grid"
+import {
+  MEDIA_UPLOADER_PAGE_SIZE,
+  MediaPagination,
+} from "@/components/media/media-pagination"
 import { UploadTrigger } from "@/components/media/upload-trigger"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -47,6 +51,20 @@ export function MediaContent({
   )
   const [isBulkUpdating, setIsBulkUpdating] = useState(false)
   const [detailFile, setDetailFile] = useState<MediaFile | null>(null)
+  const [page, setPage] = useState(1)
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDebouncedSearch(searchQuery.trim()),
+      300,
+    )
+    return () => window.clearTimeout(timer)
+  }, [searchQuery])
+
+  useEffect(() => {
+    setPage(1)
+  }, [selectedTag, contentTypeFilter, hashtagFilters, sortOrder, debouncedSearch])
 
   const buildApiUrl = useMemo(() => {
     const params = new URLSearchParams()
@@ -57,16 +75,30 @@ export function MediaContent({
     if (hashtagFilters.length > 0) {
       params.append("tags", hashtagFilters.join(","))
     }
+    if (debouncedSearch) params.append("q", debouncedSearch)
     params.append("sort", "createdAt")
     params.append("order", sortOrder === "latest" ? "desc" : "asc")
+    params.append("page", String(page))
+    params.append("limit", String(MEDIA_UPLOADER_PAGE_SIZE))
     return `/api/media-files?${params.toString()}`
-  }, [selectedTag, contentTypeFilter, hashtagFilters, sortOrder])
+  }, [
+    selectedTag,
+    contentTypeFilter,
+    hashtagFilters,
+    sortOrder,
+    debouncedSearch,
+    page,
+  ])
 
-  const { data: filesData, mutate: mutateFiles } = useSWR(buildApiUrl, fetcher)
+  const { data: filesData, mutate: mutateFiles, isLoading } = useSWR<{
+    files?: MediaFile[]
+    total?: number
+    hasMore?: boolean
+  }>(buildApiUrl, fetcher)
   const { data: tags = [] } = useSWR<Tag[]>("/api/tags", fetcher)
 
   const files = (filesData?.files ?? []) as MediaFile[]
-  const isLoading = !filesData
+  const total = filesData?.total ?? 0
 
   useEffect(() => {
     if (selectedTag) {
@@ -83,14 +115,6 @@ export function MediaContent({
       onHashtagFiltersChange([...hashtagFilters, value])
     }
   }
-
-  const filteredFiles = files.filter((file) => {
-    const query = searchQuery.toLowerCase()
-    return (
-      file.fileName?.toLowerCase().includes(query) ||
-      file.filePath?.toLowerCase().includes(query)
-    )
-  })
 
   const handleDeleteMedia = async (file: MediaFile) => {
     const id = typeof file._id === "string" ? file._id : file._id?.toString()
@@ -276,13 +300,16 @@ export function MediaContent({
           <p className="py-12 text-center text-muted-foreground">
             Loading files…
           </p>
-        ) : filteredFiles.length === 0 ? (
+        ) : files.length === 0 ? (
           <p className="py-12 text-center text-muted-foreground">
-            No files found. Upload images or videos to get started.
+            {debouncedSearch || hashtagFilters.length > 0 || selectedTag
+              ? "No files match your filters."
+              : "No files found. Upload images or videos to get started."}
           </p>
         ) : viewMode === "grid" ? (
+          <>
           <MediaGrid
-            mediaFiles={filteredFiles}
+            mediaFiles={files}
             onDeleteMedia={(file) => void handleDeleteMedia(file)}
             onMediaUpdated={() => void mutateFiles()}
             editMode={editMode}
@@ -298,7 +325,7 @@ export function MediaContent({
             onBulkSelectAll={() =>
               setBulkSelectedFiles(
                 new Set(
-                  filteredFiles
+                  files
                     .map((file) =>
                       typeof file._id === "string"
                         ? file._id
@@ -310,9 +337,19 @@ export function MediaContent({
             }
             onBulkDeselectAll={() => setBulkSelectedFiles(new Set())}
           />
+          <MediaPagination
+            className="mt-6"
+            page={page}
+            total={total}
+            pageSize={MEDIA_UPLOADER_PAGE_SIZE}
+            onPageChange={setPage}
+            isLoading={isLoading}
+          />
+          </>
         ) : (
+          <>
           <div className="space-y-2">
-            {filteredFiles.map((file) => {
+            {files.map((file) => {
               const id =
                 typeof file._id === "string" ? file._id : file._id?.toString()
               return (
@@ -354,6 +391,15 @@ export function MediaContent({
               )
             })}
           </div>
+          <MediaPagination
+            className="mt-6"
+            page={page}
+            total={total}
+            pageSize={MEDIA_UPLOADER_PAGE_SIZE}
+            onPageChange={setPage}
+            isLoading={isLoading}
+          />
+          </>
         )}
       </div>
 

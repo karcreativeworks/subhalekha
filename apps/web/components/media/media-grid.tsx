@@ -114,7 +114,9 @@ export function MediaGrid({
             {columnFiles.map((mediaFile) => {
               const fileId = getFileId(mediaFile)
               const isBulkSelected = bulkSelectedFiles.has(fileId)
-              const originalSrc = mediaFile.filePath ?? ""
+              const originalSrc = mediaFile.contentType === 'image' ?
+                getMediaImageUrl(mediaFile, "original")
+                : mediaFile.filePath ?? ""
               const gridSrc =
                 mediaFile.contentType === "image"
                   ? getMediaImageUrl(mediaFile, "thumbnail")
@@ -141,9 +143,9 @@ export function MediaGrid({
                       srcSet={
                         mediaFile.imageDelivery
                           ? [
-                              `${getMediaImageUrl(mediaFile, "thumbnail")} 320w`,
-                              `${getMediaImageUrl(mediaFile, "medium")} 800w`,
-                            ].join(", ")
+                            `${getMediaImageUrl(mediaFile, "thumbnail")} 320w`,
+                            `${getMediaImageUrl(mediaFile, "medium")} 800w`,
+                          ].join(", ")
                           : undefined
                       }
                       sizes="(max-width: 768px) 50vw, 20vw"

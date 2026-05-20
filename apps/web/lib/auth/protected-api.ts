@@ -3,6 +3,8 @@ export const protectedApiPathPatterns: RegExp[] = [
   /^\/api\/media-files(?:\/|$)/,
   /^\/api\/tags$/,
   /^\/api\/users$/,
+  /^\/api\/events(?:\/|$)/, // includes /api/events/:id/blocks
+  /^\/api\/gallery-blocks(?:\/|$)/,
   /^\/api\/admin-users(?:\/|$)/,
 ]
 

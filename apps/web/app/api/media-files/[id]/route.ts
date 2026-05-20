@@ -2,7 +2,11 @@ import { ObjectId } from "mongodb"
 import { NextRequest, NextResponse } from "next/server"
 
 import type { MediaFile, UpdateMediaFileRequest } from "@/app/types/media"
-import { requireAdminAccess } from "@/lib/auth/require-access"
+import { MEDIA_READ_ACCESS } from "@/lib/auth/access"
+import {
+  requireAdminAccess,
+  requireAdminAnyAccess,
+} from "@/lib/auth/require-access"
 import { getDb } from "@/lib/db/mongodb"
 import { normalizeMediaFile } from "@/lib/media/normalize-media"
 
@@ -11,7 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    const { clientId } = await requireAdminAnyAccess(MEDIA_READ_ACCESS)
     const { id } = await params
 
     if (!ObjectId.isValid(id)) {

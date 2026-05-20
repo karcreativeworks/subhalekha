@@ -73,7 +73,7 @@ function LoginForm() {
             id="clientId"
             type="text"
             className={inputClassName}
-            placeholder="your-client-id"
+            placeholder="username"
             required
             autoComplete="username"
             value={clientId}

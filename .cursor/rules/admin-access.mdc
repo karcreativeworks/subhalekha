@@ -1,0 +1,36 @@
+---
+description: Keep admin permissions in sync when adding admin pages or APIs
+globs: apps/web/app/admin/**/*,apps/web/app/api/**/*,apps/web/lib/auth/**/*
+alwaysApply: false
+---
+
+# Admin access checklist
+
+When adding or changing an **admin page**, **admin API route**, or **protected feature**, update all of the following in the same change:
+
+1. **`apps/web/lib/auth/access.ts`**
+   - Add a new key under `ADMIN_ACCESS` (camelCase string value).
+   - Add it to `ALL_ADMIN_ACCESS` and `ADMIN_ACCESS_LABELS`.
+   - If the feature uses shared tags, add the key to `TAG_ADMIN_ACCESS` when appropriate.
+   - If the feature browses media (e.g. cover picker), add the key to `MEDIA_READ_ACCESS` when appropriate.
+   - Update `getDefaultAdminPath()` so users with only that permission land somewhere useful.
+
+2. **`apps/web/lib/auth/require-access.ts`**
+   - Use `requireAdminAccess(ADMIN_ACCESS.YOUR_KEY)` on mutating routes.
+   - Use `requireAdminAnyAccess([...])` when multiple roles may read the same resource (e.g. gallery blocks reading events for a dropdown).
+
+3. **`apps/web/lib/auth/protected-api.ts`**
+   - Register new `/api/...` path patterns so middleware requires a session.
+
+4. **`apps/web/middleware.ts`**
+   - Add matching `matcher` entries for new API routes under `/admin` or `/api`.
+
+5. **UI**
+   - Wrap the page with `<RequireAccess access={ADMIN_ACCESS.YOUR_KEY}>`.
+   - Add a nav item in `apps/web/components/admin/admin-shell.tsx` with the same access key.
+   - Super admins (`superAdmin`) already bypass checks via `hasAccess` / `isSuperAdmin`.
+
+6. **Admin users**
+   - New keys are automatically available on the Admin Users form via `ALL_ADMIN_ACCESS`; no separate allowlist unless you intentionally restrict assignable permissions.
+
+Do not ship admin UI or APIs without the corresponding permission key and route protection.

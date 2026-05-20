@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import type { CreateTagRequest, Tag } from "@/app/types/media"
-import { requireAdminAccess } from "@/lib/auth/require-access"
+import { TAG_ADMIN_ACCESS } from "@/lib/auth/access"
+import { requireAdminAnyAccess } from "@/lib/auth/require-access"
 import { getDb } from "@/lib/db/mongodb"
 
 export async function GET() {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    const { clientId } = await requireAdminAnyAccess(TAG_ADMIN_ACCESS)
     const db = await getDb()
     const tags = await db
       .collection<Tag>("tags")
@@ -25,7 +26,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    const { clientId } = await requireAdminAnyAccess(TAG_ADMIN_ACCESS)
     const body = (await request.json()) as CreateTagRequest
     const { id, displayName } = body
 

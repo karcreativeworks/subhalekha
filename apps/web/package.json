@@ -16,19 +16,20 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",
     "@aws-sdk/s3-request-presigner": "^3.787.0",
-    "class-variance-authority": "^0.7.1",
-    "lucide-react": "^0.511.0",
-    "mongodb": "^6.20.0",
-    "react-dropzone": "^14.3.8",
-    "sonner": "^2.0.3",
-    "swr": "^2.3.3",
     "@hugeicons/core-free-icons": "^4.1.4",
     "@hugeicons/react": "^1.1.6",
     "@workspace/ui": "*",
+    "class-variance-authority": "^0.7.1",
+    "lucide-react": "^0.511.0",
+    "mongodb": "^6.20.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-dropzone": "^14.3.8",
+    "sonner": "^2.0.3",
+    "swr": "^2.3.3",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

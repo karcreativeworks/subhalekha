@@ -1,0 +1,45 @@
+@keyframes gallery-card-shine {
+  0% {
+    transform: translateX(-130%) skewX(-14deg);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.9;
+  }
+  24% {
+    transform: translateX(260%) skewX(-14deg);
+    opacity: 0.9;
+  }
+  30%,
+  100% {
+    transform: translateX(260%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+
+.gallery-card-shine-beam {
+  position: absolute;
+  top: -50%;
+  left: 0;
+  height: 200%;
+  width: 45%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 35%,
+    rgb(255 255 255 / 0.08) 42%,
+    rgb(255 255 255 / 0.45) 50%,
+    rgb(255 255 255 / 0.08) 58%,
+    transparent 65%,
+    transparent 100%
+  );
+  animation: gallery-card-shine linear infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-card-shine-beam {
+    animation: none;
+    opacity: 0;
+  }
+}

@@ -1,6 +1,8 @@
 /** Known admin permission keys. */
 export const ADMIN_ACCESS = {
   MEDIA_UPLOADER: "mediaUploader",
+  EVENTS_MANAGER: "eventsManager",
+  GALLERY_BLOCKS_MANAGER: "galleryBlocksManager",
   ADMIN_USERS: "adminUsers",
   SUPER_ADMIN: "superAdmin",
 } as const
@@ -8,27 +10,39 @@ export const ADMIN_ACCESS = {
 export type AdminAccessKey =
   (typeof ADMIN_ACCESS)[keyof typeof ADMIN_ACCESS]
 
-/** Granular permissions assignable per feature. */
+/** Permissions assignable on the admin users page. */
 export const ALL_ADMIN_ACCESS: AdminAccessKey[] = [
   ADMIN_ACCESS.MEDIA_UPLOADER,
+  ADMIN_ACCESS.EVENTS_MANAGER,
+  ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
   ADMIN_ACCESS.ADMIN_USERS,
+  ADMIN_ACCESS.SUPER_ADMIN,
 ]
 
 export const ADMIN_ACCESS_LABELS: Record<AdminAccessKey, string> = {
   [ADMIN_ACCESS.MEDIA_UPLOADER]: "Media Uploader",
+  [ADMIN_ACCESS.EVENTS_MANAGER]: "Events",
+  [ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER]: "Gallery Blocks",
   [ADMIN_ACCESS.ADMIN_USERS]: "Admin Users",
   [ADMIN_ACCESS.SUPER_ADMIN]: "Super Admin",
 }
+
+/** Permissions that may read or create shared tags (same collection as media). */
+export const TAG_ADMIN_ACCESS: AdminAccessKey[] = [
+  ADMIN_ACCESS.MEDIA_UPLOADER,
+  ADMIN_ACCESS.EVENTS_MANAGER,
+  ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
+]
+
+/** Permissions that may browse media (e.g. cover image picker). */
+export const MEDIA_READ_ACCESS: AdminAccessKey[] = TAG_ADMIN_ACCESS
 
 export function isSuperAdmin(access: string[] | undefined): boolean {
   return access?.includes(ADMIN_ACCESS.SUPER_ADMIN) ?? false
 }
 
 export function isValidAccessKey(key: string): key is AdminAccessKey {
-  return (
-    ALL_ADMIN_ACCESS.includes(key as AdminAccessKey) ||
-    key === ADMIN_ACCESS.SUPER_ADMIN
-  )
+  return ALL_ADMIN_ACCESS.includes(key as AdminAccessKey)
 }
 
 export function hasAccess(
@@ -54,6 +68,12 @@ export function getDefaultAdminPath(
 ): string | null {
   if (hasAccess(access, ADMIN_ACCESS.MEDIA_UPLOADER)) {
     return "/admin/media"
+  }
+  if (hasAccess(access, ADMIN_ACCESS.EVENTS_MANAGER)) {
+    return "/admin/events"
+  }
+  if (hasAccess(access, ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER)) {
+    return "/admin/gallery-blocks"
   }
   if (hasAccess(access, ADMIN_ACCESS.ADMIN_USERS)) {
     return "/admin/users"

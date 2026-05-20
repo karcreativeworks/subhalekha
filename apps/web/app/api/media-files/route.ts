@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import type { CreateMediaFileRequest, MediaFile } from "@/app/types/media"
-import { requireAdminAccess } from "@/lib/auth/require-access"
+import { MEDIA_READ_ACCESS } from "@/lib/auth/access"
+import {
+  requireAdminAccess,
+  requireAdminAnyAccess,
+} from "@/lib/auth/require-access"
 import { getDb } from "@/lib/db/mongodb"
 import { buildImageDelivery } from "@/lib/media/cloudflare-image"
 import { normalizeMediaFile } from "@/lib/media/normalize-media"
@@ -12,7 +16,7 @@ function escapeRegex(value: string): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    const { clientId } = await requireAdminAnyAccess(MEDIA_READ_ACCESS)
     const db = await getDb()
     const collection = db.collection<MediaFile>("mediaFiles")
     const { searchParams } = new URL(request.url)

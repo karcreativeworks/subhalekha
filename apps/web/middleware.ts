@@ -54,5 +54,10 @@ export const config = {
     "/api/users",
     "/api/admin-users",
     "/api/admin-users/:path*",
+    "/api/events",
+    "/api/events/:path*",
+    "/api/events/:id/blocks",
+    "/api/gallery-blocks",
+    "/api/gallery-blocks/:path*",
   ],
 }

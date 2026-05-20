@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     if (!filename || !contentType) {
       return NextResponse.json(
         { error: "Filename and contentType are required" },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -41,14 +41,20 @@ export async function GET(req: NextRequest) {
 
     const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 })
     const cdnHost =
-      process.env.SPACES_CDN_ENDPOINT?.replace(/^https?:\/\//, "").replace(/\/$/, "") ??
-      process.env.CLOUDFLARE_IMAGE_ZONE?.replace(/^https?:\/\//, "").replace(/\/$/, "")
+      process.env.SPACES_NORMAL_ENDPOINT?.replace(/^https?:\/\//, "").replace(
+        /\/$/,
+        ""
+      ) ??
+      process.env.CLOUDFLARE_IMAGE_ZONE?.replace(/^https?:\/\//, "").replace(
+        /\/$/,
+        ""
+      )
     const baseUrl =
       cdnHost != null
         ? `https://${cdnHost}`
         : process.env.SPACES_ENDPOINT?.replace(
             "https://",
-            `https://${process.env.SPACES_BUCKET}.`,
+            `https://${process.env.SPACES_BUCKET}.`
           )
     const publicUrl = `${baseUrl}/${key}`
 

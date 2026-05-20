@@ -2,7 +2,14 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ImageIcon, LayoutDashboard, LogOut, UserCog } from "lucide-react"
+import {
+  CalendarDays,
+  ImageIcon,
+  Images,
+  LayoutDashboard,
+  LogOut,
+  UserCog,
+} from "lucide-react"
 import { Toaster } from "sonner"
 
 import {
@@ -21,6 +28,20 @@ const navItems = [
     icon: ImageIcon,
     access: ADMIN_ACCESS.MEDIA_UPLOADER,
     breadcrumb: "Media Uploader",
+  },
+  {
+    href: "/admin/events",
+    label: "Events",
+    icon: CalendarDays,
+    access: ADMIN_ACCESS.EVENTS_MANAGER,
+    breadcrumb: "Events",
+  },
+  {
+    href: "/admin/gallery-blocks",
+    label: "Gallery Blocks",
+    icon: Images,
+    access: ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
+    breadcrumb: "Gallery Blocks",
   },
   {
     href: "/admin/users",
