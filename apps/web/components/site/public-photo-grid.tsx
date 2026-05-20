@@ -9,6 +9,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 interface PublicPhotoGridProps {
   mediaFiles: MediaFile[]
+  onPhotoClick?: (index: number) => void
   className?: string
 }
 
@@ -16,7 +17,11 @@ function getFileId(file: MediaFile) {
   return typeof file._id === "string" ? file._id : file._id?.toString() ?? ""
 }
 
-export function PublicPhotoGrid({ mediaFiles, className }: PublicPhotoGridProps) {
+export function PublicPhotoGrid({
+  mediaFiles,
+  onPhotoClick,
+  className,
+}: PublicPhotoGridProps) {
   const [numColumns, setNumColumns] = useState(2)
 
   useEffect(() => {
@@ -56,6 +61,15 @@ export function PublicPhotoGrid({ mediaFiles, className }: PublicPhotoGridProps)
     )
   }
 
+  const flatIndexById = useMemo(() => {
+    const map = new Map<string, number>()
+    mediaFiles.forEach((file, index) => {
+      const id = getFileId(file)
+      if (id) map.set(id, index)
+    })
+    return map
+  }, [mediaFiles])
+
   return (
     <div
       className={cn("flex items-start gap-2 sm:gap-3", className)}
@@ -68,6 +82,7 @@ export function PublicPhotoGrid({ mediaFiles, className }: PublicPhotoGridProps)
         >
           {column.map((file) => {
             const id = getFileId(file)
+            const flatIndex = id ? flatIndexById.get(id) : undefined
             const src =
               getMediaImageUrl(file, "medium") ||
               getMediaImageUrl(file, "thumbnail") ||
@@ -84,7 +99,14 @@ export function PublicPhotoGrid({ mediaFiles, className }: PublicPhotoGridProps)
                 )}
               >
                 {src ? (
-                  <div className="relative w-full">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (flatIndex !== undefined) onPhotoClick?.(flatIndex)
+                    }}
+                    className="relative block w-full cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 transition-transform duration-400"
+                    aria-label={`View ${file.caption || file.fileName || "photo"}`}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={src}
@@ -92,7 +114,7 @@ export function PublicPhotoGrid({ mediaFiles, className }: PublicPhotoGridProps)
                       loading="lazy"
                       className="block h-auto w-full object-cover"
                     />
-                  </div>
+                  </button>
                 ) : (
                   <div className="bg-muted aspect-[3/4] w-full" aria-hidden />
                 )}

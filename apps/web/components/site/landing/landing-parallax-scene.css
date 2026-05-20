@@ -1,0 +1,133 @@
+/* Knock out white GIF backgrounds against the sky layers below. */
+.bird-cutout {
+  mix-blend-mode: multiply;
+  filter: contrast(1.06) saturate(1.08);
+}
+
+.lotus-cutout {
+  mix-blend-mode: screen;
+  filter: contrast(1.06) saturate(1.08);
+}
+
+/* --- Foreground fog scroll (tablet+ defaults: horizontal) --- */
+@keyframes fg-scroll-x {
+  from {
+    transform: translateX(calc(-110vw));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fg-tile-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+    filter: blur(3px) brightness(1.06);
+  }
+  50% {
+    opacity: 0.75;
+    filter: blur(0px) brightness(1);
+  }
+}
+
+.fg-scroll-track {
+  display: flex;
+  height: 100%;
+  width: max-content;
+  flex-direction: row;
+}
+
+.fg-scroll-tile {
+  height: 100%;
+  width: 110vw;
+  flex-shrink: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.fg-scroll-track--active {
+  animation: fg-scroll-x 32s linear infinite;
+}
+
+.fg-scroll-track--active .fg-scroll-tile {
+  animation: fg-tile-breathe 8s ease-in-out infinite;
+}
+
+.fg-scroll-track--active .fg-scroll-tile:nth-child(2) {
+  animation-delay: -4s;
+}
+
+/* Mobile only: vertical fog drift + softer edges (below sm / 640px) */
+@media (max-width: 639px) {
+  @keyframes fg-scroll-y {
+    from {
+      transform: translateY(calc(-115svh));
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fg-tile-breathe-mobile {
+    0%,
+    100% {
+      opacity: 0.38;
+      filter: blur(6px) brightness(1.06);
+    }
+    50% {
+      opacity: 0.62;
+      filter: blur(2px) brightness(1);
+    }
+  }
+
+  .fg-scroll-layer {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 14%,
+      black 86%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 14%,
+      black 86%,
+      transparent 100%
+    );
+  }
+
+  .fg-scroll-track {
+    flex-direction: column;
+    width: 100%;
+    height: max-content;
+  }
+
+  .fg-scroll-track--active {
+    animation: fg-scroll-y 30s linear infinite;
+  }
+
+  .fg-scroll-tile {
+    width: 100%;
+    height: 115svh;
+    min-height: 115svh;
+    transform: scale(1.14);
+    transform-origin: center center;
+  }
+
+  .fg-scroll-track--active .fg-scroll-tile {
+    animation: fg-tile-breathe-mobile 8s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fg-scroll-track--active {
+    animation: none;
+  }
+
+  .fg-scroll-track--active .fg-scroll-tile {
+    animation: none;
+    opacity: 0.7;
+  }
+}

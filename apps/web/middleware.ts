@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { isAdminPagePath } from "@/lib/auth/auth-config"
-import { isProtectedApiPath } from "@/lib/auth/protected-api"
+import { isProtectedApiPath, isPublicApiPath } from "@/lib/auth/protected-api"
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session"
 
 async function getSessionClientId(
@@ -18,6 +18,11 @@ async function getSessionClientId(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  if (isPublicApiPath(pathname)) {
+    return NextResponse.next()
+  }
+
   const clientId = await getSessionClientId(request)
 
   if (isProtectedApiPath(pathname)) {
@@ -59,5 +64,6 @@ export const config = {
     "/api/events/:id/blocks",
     "/api/gallery-blocks",
     "/api/gallery-blocks/:path*",
+    "/api/public/:path*",
   ],
 }

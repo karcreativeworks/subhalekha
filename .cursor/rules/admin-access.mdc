@@ -25,6 +25,7 @@ When adding or changing an **admin page**, **admin API route**, or **protected f
 
 4. **`apps/web/middleware.ts`**
    - Add matching `matcher` entries for new API routes under `/admin` or `/api`.
+   - Guest routes under **`/api/public/*`** must bypass session checks (see `isPublicApiPath`); keep their matcher entry and do not require `x-client-id`.
 
 5. **UI**
    - Wrap the page with `<RequireAccess access={ADMIN_ACCESS.YOUR_KEY}>`.

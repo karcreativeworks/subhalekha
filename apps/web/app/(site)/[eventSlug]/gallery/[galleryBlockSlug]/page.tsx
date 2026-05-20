@@ -61,6 +61,7 @@ export default async function GalleryBlockPage({
       <PublicPhotoGridInfinite
         eventSlug={event.eventSlug}
         galleryBlockSlug={block.galleryBlockSlug}
+        bgMusicUrl={block.bgMusic}
         initialPhotos={files}
         initialHasMore={hasMore}
         initialTotal={total}

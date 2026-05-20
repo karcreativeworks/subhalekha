@@ -140,6 +140,7 @@ export async function POST(request: NextRequest) {
       tags: body.tags ?? [],
       team: body.team,
       captureDate,
+      bgMusic: body.bgMusic?.trim() || undefined,
       createdAt: now,
       updatedAt: now,
     }

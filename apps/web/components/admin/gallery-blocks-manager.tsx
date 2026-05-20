@@ -38,6 +38,7 @@ type FormState = {
   tags: string[]
   team: Team
   captureDate: string
+  bgMusic: string
 }
 
 const emptyForm = (): FormState => ({
@@ -51,6 +52,7 @@ const emptyForm = (): FormState => ({
   tags: [],
   team: "both",
   captureDate: "",
+  bgMusic: "",
 })
 
 export function GalleryBlocksManager() {
@@ -92,6 +94,7 @@ export function GalleryBlocksManager() {
       tags: block.tags ?? [],
       team: block.team,
       captureDate: toDateInputValue(block.captureDate),
+      bgMusic: block.bgMusic ?? "",
     })
     setDialogOpen(true)
   }
@@ -136,6 +139,7 @@ export function GalleryBlocksManager() {
         tags: form.tags,
         team: form.team,
         captureDate: form.captureDate,
+        bgMusic: form.bgMusic.trim() || undefined,
       }
 
       const response = await fetch(
@@ -419,6 +423,22 @@ export function GalleryBlocksManager() {
                   }))
                 }
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="block-bg-music">Slideshow background music</Label>
+              <Input
+                id="block-bg-music"
+                type="url"
+                value={form.bgMusic}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, bgMusic: event.target.value }))
+                }
+                placeholder="https://…/music.mp3"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional. Plays when visitors start slideshow on the public gallery.
+              </p>
             </div>
           </div>
 

@@ -1,8 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Play } from "lucide-react"
 
 import type { MediaFile } from "@/app/types/media"
+import { PresenterView } from "@/components/site/presenter-view"
 import { PublicPhotoGrid } from "@/components/site/public-photo-grid"
 import { glassPanel } from "@/components/site/glass"
 import {
@@ -23,6 +25,7 @@ interface PublicGalleryMediaResponse {
 interface PublicPhotoGridInfiniteProps {
   eventSlug: string
   galleryBlockSlug: string
+  bgMusicUrl?: string
   initialPhotos: MediaFile[]
   initialHasMore: boolean
   initialTotal: number
@@ -36,12 +39,16 @@ function getFileId(file: MediaFile) {
 export function PublicPhotoGridInfinite({
   eventSlug,
   galleryBlockSlug,
+  bgMusicUrl,
   initialPhotos,
   initialHasMore,
   initialTotal,
   className,
 }: PublicPhotoGridInfiniteProps) {
   const [photos, setPhotos] = useState(initialPhotos)
+  const [presenterOpen, setPresenterOpen] = useState(false)
+  const [presenterIndex, setPresenterIndex] = useState(0)
+  const [autoStartSlideshow, setAutoStartSlideshow] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(initialHasMore)
   const [total, setTotal] = useState(initialTotal)
@@ -71,6 +78,7 @@ export function PublicPhotoGridInfinite({
       })
       const response = await fetch(
         `/api/public/events/${encodeURIComponent(eventSlug)}/gallery/${encodeURIComponent(galleryBlockSlug)}/media?${params}`,
+        { credentials: "omit" },
       )
 
       if (!response.ok) {
@@ -148,6 +156,18 @@ export function PublicPhotoGridInfinite({
     return `${photos.length} of ${total} photos`
   }, [photos.length, total])
 
+  const openPhoto = useCallback((index: number) => {
+    setAutoStartSlideshow(false)
+    setPresenterIndex(index)
+    setPresenterOpen(true)
+  }, [])
+
+  const openSlideshow = useCallback(() => {
+    setPresenterIndex(0)
+    setAutoStartSlideshow(true)
+    setPresenterOpen(true)
+  }, [])
+
   if (!photos.length) {
     return (
       <div
@@ -165,13 +185,37 @@ export function PublicPhotoGridInfinite({
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
-      {/* {loadedLabel ? (
-        <p className="text-muted-foreground text-center text-xs tabular-nums">
-          {loadedLabel}
-        </p>
-      ) : null} */}
+      {/* <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={openSlideshow}
+          className={cn(
+            glassPanel(
+              "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/10",
+            ),
+          )}
+          aria-label="Play slideshow fullscreen"
+        >
+          <Play className="size-4 fill-current" />
+          Slideshow
+        </button>
+      </div> */}
 
-      <PublicPhotoGrid mediaFiles={photos} />
+      <PublicPhotoGrid mediaFiles={photos} onPhotoClick={openPhoto} />
+
+      <PresenterView
+        photos={photos}
+        open={presenterOpen}
+        index={presenterIndex}
+        onOpenChange={(open) => {
+          setPresenterOpen(open)
+          if (!open) setAutoStartSlideshow(false)
+        }}
+        onIndexChange={setPresenterIndex}
+        bgMusicUrl={bgMusicUrl}
+        autoStartSlideshow={autoStartSlideshow}
+        defaultSlideshowSeconds={3}
+      />
 
       <div
         ref={sentinelRef}

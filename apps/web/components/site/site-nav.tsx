@@ -339,7 +339,7 @@ export function SiteNav({ events }: SiteNavProps) {
         <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" className="relative z-10 flex shrink-0 items-center">
             <Image
-              src="/logo_letters_small2.png"
+              src="/logo_letters_small.png"
               alt="Subhalekha"
               width={120}
               height={36}
@@ -347,7 +347,7 @@ export function SiteNav({ events }: SiteNavProps) {
               priority
             />
             <Image
-              src="/logo_letters_small2_dark.png"
+              src="/logo_letters_small_dark.png"
               alt="Subhalekha"
               width={120}
               height={36}

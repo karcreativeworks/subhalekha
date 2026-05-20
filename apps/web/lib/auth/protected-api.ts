@@ -8,23 +8,24 @@ export const protectedApiPathPatterns: RegExp[] = [
   /^\/api\/admin-users(?:\/|$)/,
 ]
 
+function normalizePathname(pathname: string): string {
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    return pathname.slice(0, -1)
+  }
+  return pathname
+}
+
 /** Guest-site JSON under `/api/public/*` must stay unauthenticated (no session). */
-function isPublicApiPath(normalizedPathname: string): boolean {
-  return (
-    normalizedPathname === "/api/public" ||
-    normalizedPathname.startsWith("/api/public/")
-  )
+export function isPublicApiPath(pathname: string): boolean {
+  const n = normalizePathname(pathname)
+  return n === "/api/public" || n.startsWith("/api/public/")
 }
 
 export function isProtectedApiPath(pathname: string): boolean {
-  const normalized =
-    pathname.length > 1 && pathname.endsWith("/")
-      ? pathname.slice(0, -1)
-      : pathname
-
-  if (isPublicApiPath(normalized)) {
+  if (isPublicApiPath(pathname)) {
     return false
   }
 
+  const normalized = normalizePathname(pathname)
   return protectedApiPathPatterns.some((pattern) => pattern.test(normalized))
 }

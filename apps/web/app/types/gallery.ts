@@ -45,6 +45,8 @@ export interface GalleryBlock {
   tags: string[]
   team: Team
   captureDate: Date | string
+  /** Optional background music URL for public slideshow mode. */
+  bgMusic?: string
   createdAt: Date | string
   updatedAt: Date | string
 }
@@ -105,6 +107,7 @@ export interface CreateGalleryBlockRequest {
   tags?: string[]
   team: Team
   captureDate: string
+  bgMusic?: string
 }
 
 export interface UpdateGalleryBlockRequest {
@@ -118,4 +121,5 @@ export interface UpdateGalleryBlockRequest {
   tags?: string[]
   team?: Team
   captureDate?: string
+  bgMusic?: string
 }

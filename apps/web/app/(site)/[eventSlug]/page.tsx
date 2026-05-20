@@ -57,6 +57,8 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
             ? event.coverPicHorizontal
             : undefined
         }
+        backLabel="Back to home"
+        backHref="/"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

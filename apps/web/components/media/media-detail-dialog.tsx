@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ExternalLink, Loader2, Trash2 } from "lucide-react"
+import { Copy, ExternalLink, Loader2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import type { MediaFile } from "@/app/types/media"
@@ -88,6 +88,18 @@ export function MediaDetailDialog({
   if (!mediaFile) return null
 
   const originalSrc = mediaFile.filePath ?? ""
+  const isAudio = mediaFile.contentType === "audio"
+
+  const copyOriginalUrl = async () => {
+    if (!originalSrc) return
+    try {
+      await navigator.clipboard.writeText(originalSrc)
+      toast.success("URL copied to clipboard")
+    } catch {
+      toast.error("Could not copy URL")
+    }
+  }
+
   const previewSrc =
     mediaFile.contentType === "image"
       ? getMediaImageUrl(mediaFile, "large") || originalSrc
@@ -158,12 +170,25 @@ export function MediaDetailDialog({
             />
 
             {originalSrc ? (
-              <Button variant="outline" size="sm" asChild>
-                <a href={originalSrc} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 size-4" />
-                  Open original file
-                </a>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href={originalSrc} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 size-4" />
+                    Open original file
+                  </a>
+                </Button>
+                {isAudio ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void copyOriginalUrl()}
+                  >
+                    <Copy className="mr-2 size-4" />
+                    Copy URL
+                  </Button>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </div>

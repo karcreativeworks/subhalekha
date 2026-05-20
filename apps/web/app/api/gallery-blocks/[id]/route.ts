@@ -149,6 +149,9 @@ export async function PUT(
       }
       update.captureDate = captureDate
     }
+    if (body.bgMusic !== undefined) {
+      update.bgMusic = body.bgMusic.trim() || undefined
+    }
     if (body.parentEventId !== undefined) {
       if (!body.parentEventId.trim()) {
         return NextResponse.json(
