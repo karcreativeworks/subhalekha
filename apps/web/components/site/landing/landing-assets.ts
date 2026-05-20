@@ -2,7 +2,7 @@ export const LANDING_ASSETS = {
   bg: "/landing/clouds_background.jpg",
   driftBg: "/landing/clouds_drifting_bg.jpg",
   fog: `/landing/${encodeURIComponent("—Pngtree—light cloud of fog png_8058994.png")}`,
-  fg: "/landing/clouds_white-fg.png",
+  fg: "/landing/clouds-white-fg-small.png",
   sparrow: "/landing/flying_sparrow.gif",
   woodpecker: "/landing/flying_woodpecker.gif",
   logo: "/logo_transparent_main.png",
