@@ -60,11 +60,12 @@ export interface GalleryBlock {
 
 export type EventPublic = Omit<
   Event,
-  "_id" | "coverPicHorizontal" | "coverPicVertical"
+  "_id" | "coverPicHorizontal" | "coverPicVertical" | "isVisible"
 > & {
   id: string
   coverPicHorizontal: string
   coverPicVertical: string
+  isVisible: boolean
 }
 export type GalleryBlockPublic = Omit<GalleryBlock, "_id"> & { id: string }
 

@@ -7,7 +7,7 @@ import { getSiteMetadataBaseUrl } from "@/lib/site/site-url"
 const SITE_NAME = "Subhalekha"
 
 /** Public OG image for the site homepage (`public/landing_og_image.png`). */
-export const LANDING_OG_IMAGE_PATH = "/landing_og_image.png"
+export const LANDING_OG_IMAGE_PATH = "/landing_og_image_small.jpeg"
 
 function absolutePublicOgImage(path: string): string {
   return new URL(path, getSiteMetadataBaseUrl()).href
@@ -20,7 +20,7 @@ export function absoluteOgImageFromHorizontalCover(
   const trimmed = horizontalUrl?.trim()
   if (!trimmed) return undefined
 
-  const sized = getCloudflareImageUrl(trimmed, "medium") || trimmed
+  const sized = getCloudflareImageUrl(trimmed, "thumbnail") || trimmed
   if (/^https?:\/\//i.test(sized)) {
     return sized
   }
