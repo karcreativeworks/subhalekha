@@ -45,9 +45,9 @@ function openGraphImageEntry(
 /** Site homepage — uses `landing_og_image.png`. */
 export function buildSiteHomeMetadata(): Metadata {
   const path = "/"
-  const title = SITE_NAME
+  const title = `${SITE_NAME} - శుభకర్ & శ్రీలేఖ పెళ్లి సందడి`
   const description =
-    "Celebrations & memories — browse wedding galleries and event photos."
+    "Celebrations & Memories — Browse galleries and event photos. Check out Itenary, Map & Schedule.."
   const ogUrl = absolutePublicOgImage(LANDING_OG_IMAGE_PATH)
   const images = [{ url: ogUrl }]
 
