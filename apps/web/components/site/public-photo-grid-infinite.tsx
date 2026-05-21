@@ -168,6 +168,14 @@ export function PublicPhotoGridInfinite({
 
   const canSlideshow = photos.length > 1
 
+  const handlePresenterOpenChange = useCallback((open: boolean) => {
+    setPresenterOpen(open)
+    if (!open) {
+      setAutoStartSlideshow(false)
+      slideshowAudioRef.current?.pause()
+    }
+  }, [])
+
   const openPhoto = useCallback((index: number) => {
     setAutoStartSlideshow(false)
     setPresenterIndex(index)
@@ -267,13 +275,7 @@ export function PublicPhotoGridInfinite({
         photos={photos}
         open={presenterOpen}
         index={presenterIndex}
-        onOpenChange={(open) => {
-          setPresenterOpen(open)
-          if (!open) {
-            setAutoStartSlideshow(false)
-            slideshowAudioRef.current?.pause()
-          }
-        }}
+        onOpenChange={handlePresenterOpenChange}
         onIndexChange={setPresenterIndex}
         bgMusicUrl={bgMusicUrl}
         audioRef={slideshowAudioRef}

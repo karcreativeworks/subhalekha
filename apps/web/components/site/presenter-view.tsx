@@ -223,6 +223,8 @@ export function PresenterView({
   const trackRef = useRef<HTMLDivElement>(null)
   const fullscreenRootRef = useRef<HTMLDivElement>(null)
   const historyPushedRef = useRef(false)
+  const historySessionPushedRef = useRef(false)
+  const dismissPresenterRef = useRef<() => void>(() => {})
   const indexRef = useRef(0)
   const internalAudioRef = useRef<HTMLAudioElement>(null)
   const audioRef = externalAudioRef ?? internalAudioRef
@@ -370,6 +372,8 @@ export function PresenterView({
     onOpenChange(false)
   }, [exitFullscreen, onOpenChange])
 
+  dismissPresenterRef.current = dismissPresenter
+
   const close = useCallback(() => {
     if (historyPushedRef.current) {
       history.back()
@@ -379,19 +383,35 @@ export function PresenterView({
   }, [dismissPresenter])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      historySessionPushedRef.current = false
+      return
+    }
 
-    history.pushState({ [PRESENTER_HISTORY_STATE]: true }, "")
-    historyPushedRef.current = true
+    if (!historySessionPushedRef.current) {
+      history.pushState({ [PRESENTER_HISTORY_STATE]: true }, "")
+      historySessionPushedRef.current = true
+      historyPushedRef.current = true
+    }
 
     const onPopState = () => {
+      if (!historyPushedRef.current) return
       historyPushedRef.current = false
-      dismissPresenter()
+      historySessionPushedRef.current = false
+      dismissPresenterRef.current()
     }
 
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
-  }, [open, dismissPresenter])
+  }, [open])
+
+  useEffect(() => {
+    if (open || !historyPushedRef.current) return
+
+    historyPushedRef.current = false
+    historySessionPushedRef.current = false
+    history.back()
+  }, [open])
 
   const zoomBy = useCallback((delta: number) => {
     setScale((prev) => {
