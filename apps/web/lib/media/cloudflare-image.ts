@@ -62,13 +62,9 @@ export function getCloudflareImageUrl(
   const trimmed = imageUrl?.trim()
   if (!trimmed) return ""
 
-  const zone = getCloudflareImageZone()
+  const zone = getCloudflareImageZone() ?? "media.subhalekha.live"
 
-  if (!zone) {
-    return trimmed
-  }
-
-  if (zone && trimmed.includes(zone)) {
+  if (trimmed.includes(zone)) {
     return trimmed
   }
 
