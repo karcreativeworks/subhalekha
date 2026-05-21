@@ -20,7 +20,7 @@ export function absoluteOgImageFromHorizontalCover(
   const trimmed = horizontalUrl?.trim()
   if (!trimmed) return undefined
 
-  const sized = getCloudflareImageUrl(trimmed, "thumbnail") || trimmed
+  const sized = getCloudflareImageUrl(trimmed, "medium") || trimmed
   if (/^https?:\/\//i.test(sized)) {
     return sized
   }
