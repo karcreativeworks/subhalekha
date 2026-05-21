@@ -2,9 +2,9 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { EventContentGrid } from "@/components/site/event-content-grid"
 import { PageHeader } from "@/components/site/page-header"
-import { glassPanel } from "@/components/site/glass"
-import { getPublicEventBySlug } from "@/lib/gallery/public-event"
+import { getPublicEventBySlug, getPublicEventContentGrid } from "@/lib/gallery/public-event"
 import { buildEventLandingMetadata } from "@/lib/site/share-metadata"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -43,6 +43,8 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
     notFound()
   }
 
+  const gridItems = await getPublicEventContentGrid(event)
+
   return (
     <>
       <PageHeader
@@ -61,7 +63,9 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
         backHref="/"
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <EventContentGrid items={gridItems} />
+
+      {/* <div className="grid gap-4 sm:grid-cols-2">
         <section className={cn(glassPanel("rounded-2xl p-6"))}>
           <h2 className="text-sm font-medium tracking-wide uppercase">
             When
@@ -88,7 +92,7 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
             View galleries →
           </Link>
         </section>
-      </div>
+      </div> */}
     </>
   )
 }

@@ -7,6 +7,7 @@ import {
   ImageIcon,
   Images,
   LayoutDashboard,
+  Video,
   LogOut,
   UserCog,
 } from "lucide-react"
@@ -42,6 +43,13 @@ const navItems = [
     icon: Images,
     access: ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
     breadcrumb: "Gallery Blocks",
+  },
+  {
+    href: "/admin/video-blocks",
+    label: "Video Blocks",
+    icon: Video,
+    access: ADMIN_ACCESS.VIDEO_BLOCKS_MANAGER,
+    breadcrumb: "Video Blocks",
   },
   {
     href: "/admin/users",

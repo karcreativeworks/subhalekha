@@ -14,7 +14,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
+    await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
     const { id } = await params
     const body = (await request.json()) as UpdateEventBlocksRequest
 
@@ -29,14 +29,21 @@ export async function PUT(
       )
     }
 
-    const validation = await validateEventBlockRefs(id, clientId, body.blocks)
+    const db = await getDb()
+    const existing = await db.collection<Event>("events").findOne({
+      _id: new ObjectId(id),
+    })
+    if (!existing) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 })
+    }
+
+    const validation = await validateEventBlockRefs(id, body.blocks)
     if (!validation.ok) {
       return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
-    const db = await getDb()
     const result = await db.collection("events").findOneAndUpdate(
-      { _id: new ObjectId(id), clientId },
+      { _id: new ObjectId(id) },
       {
         $set: {
           blocks: validation.normalized,

@@ -1,25 +1,45 @@
 import { ObjectId } from "mongodb"
 
-import type { Event, EventBlockRef, GalleryBlock } from "@/app/types/gallery"
-import { normalizeEventBlockRefs } from "@/lib/gallery/event-block-order"
+import type {
+  Event,
+  EventBlockRef,
+  EventBlockType,
+  GalleryBlock,
+  VideoBlock,
+} from "@/app/types/gallery"
+import {
+  normalizeEventBlockRefs,
+  resolveEventBlockType,
+} from "@/lib/gallery/event-block-order"
 import { getDb } from "@/lib/db/mongodb"
+
+function blockRefKey(blockId: string, blockType: EventBlockType): string {
+  return `${blockType}:${blockId}`
+}
 
 export async function appendBlockToEvent(
   eventId: string,
-  clientId: string,
   blockId: string,
+  blockType: EventBlockType = "gallery",
 ): Promise<void> {
   if (!ObjectId.isValid(eventId)) return
 
   const db = await getDb()
   const event = await db.collection<Event>("events").findOne({
     _id: new ObjectId(eventId),
-    clientId,
   })
   if (!event) return
 
   const blocks = event.blocks ?? []
-  if (blocks.some((entry) => entry.blockId === blockId)) return
+  if (
+    blocks.some(
+      (entry) =>
+        entry.blockId === blockId &&
+        resolveEventBlockType(entry) === blockType,
+    )
+  ) {
+    return
+  }
 
   const maxOrder = blocks.reduce(
     (max, entry) => Math.max(max, entry.blockOrder),
@@ -27,35 +47,42 @@ export async function appendBlockToEvent(
   )
   const next = normalizeEventBlockRefs([
     ...blocks,
-    { blockId, blockOrder: maxOrder + 1 },
+    {
+      blockId,
+      blockOrder: maxOrder + 1,
+      ...(blockType === "video" ? { blockType: "video" as const } : {}),
+    },
   ])
 
   await db.collection<Event>("events").updateOne(
-    { _id: new ObjectId(eventId), clientId },
+    { _id: new ObjectId(eventId) },
     { $set: { blocks: next, updatedAt: new Date() } },
   )
 }
 
 export async function removeBlockFromEvent(
   eventId: string,
-  clientId: string,
   blockId: string,
+  blockType?: EventBlockType,
 ): Promise<void> {
   if (!ObjectId.isValid(eventId)) return
 
   const db = await getDb()
   const event = await db.collection<Event>("events").findOne({
     _id: new ObjectId(eventId),
-    clientId,
   })
   if (!event) return
 
   const next = normalizeEventBlockRefs(
-    (event.blocks ?? []).filter((entry) => entry.blockId !== blockId),
+    (event.blocks ?? []).filter((entry) => {
+      if (entry.blockId !== blockId) return true
+      if (!blockType) return false
+      return resolveEventBlockType(entry) !== blockType
+    }),
   )
 
   await db.collection<Event>("events").updateOne(
-    { _id: new ObjectId(eventId), clientId },
+    { _id: new ObjectId(eventId) },
     { $set: { blocks: next, updatedAt: new Date() } },
   )
 }
@@ -63,17 +90,43 @@ export async function removeBlockFromEvent(
 export async function moveBlockBetweenEvents(
   fromEventId: string,
   toEventId: string,
-  clientId: string,
   blockId: string,
+  blockType: EventBlockType = "gallery",
 ): Promise<void> {
   if (fromEventId === toEventId) return
-  await removeBlockFromEvent(fromEventId, clientId, blockId)
-  await appendBlockToEvent(toEventId, clientId, blockId)
+  await removeBlockFromEvent(fromEventId, blockId, blockType)
+  await appendBlockToEvent(toEventId, blockId, blockType)
+}
+
+async function getEventBlockIdentities(
+  eventId: string,
+): Promise<{ blockId: string; blockType: EventBlockType }[]> {
+  const db = await getDb()
+  const [galleryBlocks, videoBlocks] = await Promise.all([
+    db
+      .collection<GalleryBlock>("galleryBlocks")
+      .find({ parentEventId: eventId })
+      .toArray(),
+    db
+      .collection<VideoBlock>("videoBlocks")
+      .find({ parentEventId: eventId })
+      .toArray(),
+  ])
+
+  return [
+    ...galleryBlocks.map((block) => ({
+      blockId: block._id!.toString(),
+      blockType: "gallery" as const,
+    })),
+    ...videoBlocks.map((block) => ({
+      blockId: block._id!.toString(),
+      blockType: "video" as const,
+    })),
+  ]
 }
 
 export async function validateEventBlockRefs(
   eventId: string,
-  clientId: string,
   blocks: EventBlockRef[],
 ): Promise<{ ok: true; normalized: EventBlockRef[] } | { ok: false; error: string }> {
   if (!ObjectId.isValid(eventId)) {
@@ -81,20 +134,16 @@ export async function validateEventBlockRefs(
   }
 
   const normalized = normalizeEventBlockRefs(blocks)
-  const db = await getDb()
+  const identities = await getEventBlockIdentities(eventId)
+  const expectedKeys = new Set(
+    identities.map((b) => blockRefKey(b.blockId, b.blockType)),
+  )
 
-  const childBlocks = await db
-    .collection<GalleryBlock>("galleryBlocks")
-    .find({ parentEventId: eventId, clientId })
-    .project({ _id: 1 })
-    .toArray()
-
-  const childIds = new Set(childBlocks.map((block) => block._id!.toString()))
-
-  if (normalized.length !== childIds.size) {
+  if (normalized.length !== expectedKeys.size) {
     return {
       ok: false,
-      error: "blocks must include every gallery block for this event exactly once",
+      error:
+        "blocks must include every gallery and video block for this event exactly once",
     }
   }
 
@@ -102,7 +151,9 @@ export async function validateEventBlockRefs(
     if (!ObjectId.isValid(entry.blockId)) {
       return { ok: false, error: "Invalid block id in blocks" }
     }
-    if (!childIds.has(entry.blockId)) {
+    const type = resolveEventBlockType(entry)
+    const key = blockRefKey(entry.blockId, type)
+    if (!expectedKeys.has(key)) {
       return {
         ok: false,
         error: "blocks contains an id that does not belong to this event",

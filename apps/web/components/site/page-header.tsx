@@ -123,7 +123,7 @@ export function PageHeader({
       )}
     >
       <div className="flex min-h-[inherit] flex-col sm:flex-row sm:items-stretch">
-        <div className="flex min-h-0 flex-1 flex-col p-6 sm:justify-between sm:p-8">
+        <div className="flex min-h-0 flex-1 flex-col p-6 sm:justify-start sm:p-8">
           {backHref ? (
             <Link
               href={backHref}
@@ -142,7 +142,7 @@ export function PageHeader({
           ) : null}
         </div>
 
-        <div className="group relative min-h-[200px] w-full shrink-0 overflow-hidden sm:min-h-0 sm:w-[min(60%,640px)] sm:self-stretch">
+        <div className="group relative min-h-[200px] w-full shrink-0 overflow-hidden hidden sm:block sm:min-h-0 sm:w-[min(60%,640px)] sm:self-stretch">
           <Image
             src={bgImageUrl}
             alt=""

@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     const collection = db.collection<MediaFile>("mediaFiles")
 
     if (filePath) {
-      const existingFile = await collection.findOne({ filePath, clientId })
+      const existingFile = await collection.findOne({ filePath })
       if (existingFile) {
         return NextResponse.json(
           {

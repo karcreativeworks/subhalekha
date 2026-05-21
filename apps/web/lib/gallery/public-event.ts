@@ -3,23 +3,34 @@ import { cache } from "react"
 
 import type {
   Event,
+  EventContentGridItem,
   EventPublic,
   GalleryBlock,
   GalleryBlockPublic,
   GalleryBlockPublicWithPicCount,
+  VideoBlock,
 } from "@/app/types/gallery"
 import type { MediaFile } from "@/app/types/media"
 import { getDb } from "@/lib/db/mongodb"
 import {
   reconcileEventBlockRefs,
   sortByEventBlockOrder,
+  sortItemsByEventBlockRefs,
 } from "@/lib/gallery/event-block-order"
-import { toEventPublic, toGalleryBlockPublic } from "@/lib/gallery/normalize"
+import {
+  toEventPublic,
+  toGalleryBlockPublic,
+  toVideoBlockPublic,
+} from "@/lib/gallery/normalize"
+import { getCloudflareImageUrl } from "@/lib/media/cloudflare-image"
 import { PUBLIC_GALLERY_MEDIA_PAGE_SIZE } from "@/lib/gallery/public-media-constants"
 import { isPublicDbConfigured } from "@/lib/site/public-client"
 import { normalizeMediaFile } from "@/lib/media/normalize-media"
 
 export { PUBLIC_GALLERY_MEDIA_PAGE_SIZE } from "@/lib/gallery/public-media-constants"
+
+/** Events shown on the public guest site (`isVisible` false hides; missing field = visible). */
+export const publicVisibleEventQuery = { isVisible: { $ne: false } } as const
 
 export async function getPublicEventBySlug(
   eventSlug: string
@@ -31,6 +42,7 @@ export async function getPublicEventBySlug(
   const db = await getDb()
   const doc = await db.collection<Event>("events").findOne({
     eventSlug,
+    ...publicVisibleEventQuery,
   })
 
   if (!doc) return null
@@ -72,8 +84,11 @@ export async function getPublicGalleryBlocksForEvent(
   if (!blocks.length) return []
 
   const publicBlocks = blocks.map(toGalleryBlockPublic)
-  const blockIds = publicBlocks.map((b) => b.id)
-  const orderedRefs = reconcileEventBlockRefs(event.blocks, blockIds)
+  const identities = publicBlocks.map((b) => ({
+    blockId: b.id,
+    blockType: "gallery" as const,
+  }))
+  const orderedRefs = reconcileEventBlockRefs(event.blocks, identities)
 
   const ordered = sortByEventBlockOrder(publicBlocks, orderedRefs)
 
@@ -83,6 +98,81 @@ export async function getPublicGalleryBlocksForEvent(
       picCount: await countPublicImagesForGalleryBlock(block),
     }))
   )
+}
+
+export async function getPublicVideoBlocksForEvent(
+  event: EventPublic,
+): Promise<ReturnType<typeof toVideoBlockPublic>[]> {
+  if (!isPublicDbConfigured()) {
+    return []
+  }
+
+  const db = await getDb()
+  const blocks = await db
+    .collection<VideoBlock>("videoBlocks")
+    .find({ parentEventId: event.id })
+    .toArray()
+
+  if (!blocks.length) return []
+
+  const publicBlocks = blocks.map(toVideoBlockPublic)
+  const identities = publicBlocks.map((b) => ({
+    blockId: b.id,
+    blockType: "video" as const,
+  }))
+  const orderedRefs = reconcileEventBlockRefs(event.blocks, identities)
+  return sortByEventBlockOrder(publicBlocks, orderedRefs)
+}
+
+export async function getPublicEventContentGrid(
+  event: EventPublic,
+): Promise<EventContentGridItem[]> {
+  const [galleryBlocks, videoBlocks] = await Promise.all([
+    getPublicGalleryBlocksForEvent(event),
+    getPublicVideoBlocksForEvent(event),
+  ])
+
+  const items: EventContentGridItem[] = [
+    ...galleryBlocks.map((block) => ({
+      kind: "gallery" as const,
+      id: block.id,
+      title: block.title,
+      href: `/${event.eventSlug}/gallery/${block.galleryBlockSlug}`,
+      imageUrl: getCloudflareImageUrl(block.coverPicHorizontal, "large"),
+      hasSlideshow: Boolean(block.bgMusic?.trim()),
+    })),
+    ...videoBlocks.map((block) => ({
+      kind: "video" as const,
+      id: block.id,
+      title: block.title,
+      href: `/${event.eventSlug}/video/${block.videoBlockSlug}`,
+      imageUrl: block.thumbnailUrl,
+    })),
+  ]
+
+  return sortItemsByEventBlockRefs(
+    items,
+    event.blocks,
+    (item) => `${item.kind}:${item.id}`,
+  )
+}
+
+export async function getPublicVideoBlock(
+  event: EventPublic,
+  videoBlockSlug: string,
+): Promise<ReturnType<typeof toVideoBlockPublic> | null> {
+  if (!isPublicDbConfigured()) {
+    return null
+  }
+
+  const db = await getDb()
+  const doc = await db.collection<VideoBlock>("videoBlocks").findOne({
+    parentEventId: event.id,
+    videoBlockSlug,
+  })
+
+  if (!doc) return null
+  return toVideoBlockPublic(doc)
 }
 
 export async function getPublicGalleryBlock(
@@ -160,7 +250,7 @@ export const getPublicEventsList = cache(async (): Promise<EventPublic[]> => {
   const db = await getDb()
   const docs = await db
     .collection<Event>("events")
-    .find({})
+    .find(publicVisibleEventQuery)
     .sort({ eventDate: -1 })
     .toArray()
 

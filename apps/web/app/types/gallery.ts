@@ -3,10 +3,15 @@ import type { ObjectId } from "mongodb"
 export const TEAM_VALUES = ["bride", "groom", "both"] as const
 export type Team = (typeof TEAM_VALUES)[number]
 
-/** Manual sort entry for gallery blocks on an event. */
+export const EVENT_BLOCK_TYPES = ["gallery", "video"] as const
+export type EventBlockType = (typeof EVENT_BLOCK_TYPES)[number]
+
+/** Manual sort entry for content blocks on an event (gallery + video). */
 export interface EventBlockRef {
   blockId: string
   blockOrder: number
+  /** Defaults to gallery when omitted (legacy events). */
+  blockType?: EventBlockType
 }
 
 export interface Event {
@@ -26,6 +31,8 @@ export interface Event {
   eventTime: string
   /** Ordered gallery blocks for this event (blockId + blockOrder). */
   blocks: EventBlockRef[]
+  /** When false, hidden from the public guest site (admin still lists the event). */
+  isVisible?: boolean
   createdAt: Date | string
   updatedAt: Date | string
 }
@@ -77,6 +84,7 @@ export interface CreateEventRequest {
   team: Team
   eventDate: string
   eventTime: string
+  isVisible?: boolean
 }
 
 export interface UpdateEventRequest {
@@ -90,6 +98,7 @@ export interface UpdateEventRequest {
   team?: Team
   eventDate?: string
   eventTime?: string
+  isVisible?: boolean
 }
 
 export interface UpdateEventBlocksRequest {
@@ -123,3 +132,58 @@ export interface UpdateGalleryBlockRequest {
   captureDate?: string
   bgMusic?: string
 }
+
+export interface VideoBlock {
+  _id?: ObjectId | string
+  clientId: string
+  parentEventId: string
+  title: string
+  videoBlockSlug: string
+  videoUrl: string
+  subtitle?: string
+  description?: string
+  createdAt: Date | string
+  updatedAt: Date | string
+}
+
+export type VideoBlockPublic = Omit<VideoBlock, "_id"> & {
+  id: string
+  /** Resolved preview image (YouTube thumbnail when applicable). */
+  thumbnailUrl: string | null
+}
+
+export interface CreateVideoBlockRequest {
+  parentEventId: string
+  title: string
+  videoBlockSlug: string
+  videoUrl: string
+  subtitle?: string
+  description?: string
+}
+
+export interface UpdateVideoBlockRequest {
+  parentEventId?: string
+  title?: string
+  videoBlockSlug?: string
+  videoUrl?: string
+  subtitle?: string
+  description?: string
+}
+
+/** Unified public grid card for event landing. */
+export type EventContentGridItem =
+  | {
+      kind: "gallery"
+      id: string
+      title: string
+      href: string
+      imageUrl: string
+      hasSlideshow: boolean
+    }
+  | {
+      kind: "video"
+      id: string
+      title: string
+      href: string
+      imageUrl: string | null
+    }

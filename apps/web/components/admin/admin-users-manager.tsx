@@ -23,8 +23,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import {
+  adminFetch,
+  createAdminFetcher,
+  useAdminClientId,
+} from "@/lib/admin/admin-api"
 
 type FormState = {
   clientId: string
@@ -88,9 +91,10 @@ function AccessCheckboxes({
 }
 
 export function AdminUsersManager() {
+  const clientId = useAdminClientId()
   const { data: users = [], isLoading, mutate } = useSWR<AdminClientPublic[]>(
-    "/api/admin-users",
-    fetcher,
+    clientId ? "/api/admin-users" : null,
+    createAdminFetcher(clientId),
   )
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -124,16 +128,20 @@ export function AdminUsersManager() {
     setIsSaving(true)
     try {
       if (editingId) {
-        const response = await fetch(`/api/admin-users/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            clientName: form.clientName,
-            ...(form.apiKey.trim() ? { apiKey: form.apiKey.trim() } : {}),
-            access: form.access,
-            isValid: form.isValid,
-          }),
-        })
+        const response = await adminFetch(
+          `/api/admin-users/${editingId}`,
+          clientId,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              clientName: form.clientName,
+              ...(form.apiKey.trim() ? { apiKey: form.apiKey.trim() } : {}),
+              access: form.access,
+              isValid: form.isValid,
+            }),
+          },
+        )
         if (!response.ok) {
           const data = (await response.json()) as { error?: string }
           throw new Error(data.error ?? "Update failed")
@@ -144,7 +152,7 @@ export function AdminUsersManager() {
           toast.error("Client ID and client key are required")
           return
         }
-        const response = await fetch("/api/admin-users", {
+        const response = await adminFetch("/api/admin-users", clientId, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -179,12 +187,14 @@ export function AdminUsersManager() {
     }
   }
 
-  const handleDeactivate = async (clientId: string) => {
-    if (!confirm(`Deactivate admin user "${clientId}"?`)) return
+  const handleDeactivate = async (targetClientId: string) => {
+    if (!confirm(`Deactivate admin user "${targetClientId}"?`)) return
 
-    const response = await fetch(`/api/admin-users/${clientId}`, {
-      method: "DELETE",
-    })
+    const response = await adminFetch(
+      `/api/admin-users/${targetClientId}`,
+      clientId,
+      { method: "DELETE" },
+    )
     if (response.ok) {
       toast.success("Admin user deactivated")
       void mutate()

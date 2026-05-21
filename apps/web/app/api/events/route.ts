@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: slugResult.error }, { status: 400 })
     }
 
-    if (await isEventSlugTaken(clientId, slugResult.slug)) {
+    if (await isEventSlugTaken(slugResult.slug)) {
       return NextResponse.json(
         { error: "An event with this slug already exists" },
         { status: 409 },
@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
       eventDate,
       eventTime: body.eventTime.trim(),
       blocks: [],
+      isVisible: body.isVisible ?? false,
       createdAt: now,
       updatedAt: now,
     }

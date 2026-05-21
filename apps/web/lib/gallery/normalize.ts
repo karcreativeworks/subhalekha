@@ -5,7 +5,10 @@ import type {
   EventPublic,
   GalleryBlock,
   GalleryBlockPublic,
+  VideoBlock,
+  VideoBlockPublic,
 } from "@/app/types/gallery"
+import { getVideoThumbnailUrl } from "@/lib/media/video-url"
 import { normalizeEventBlockRefs } from "@/lib/gallery/event-block-order"
 
 function serializeDate(value: Date | string): string {
@@ -21,13 +24,14 @@ function toId(value: ObjectId | string | undefined): string {
 }
 
 export function toEventPublic(doc: Event): EventPublic {
-  const { _id, coverPicHorizontal, coverPicVertical, ...rest } = doc
+  const { _id, coverPicHorizontal, coverPicVertical, isVisible, ...rest } = doc
   return {
     ...rest,
     id: toId(_id),
     blocks: normalizeEventBlockRefs(rest.blocks),
     coverPicHorizontal: coverPicHorizontal?.trim() ?? "",
     coverPicVertical: coverPicVertical?.trim() ?? "",
+    isVisible: isVisible !== false,
     eventDate: serializeDate(rest.eventDate),
     createdAt: serializeDate(rest.createdAt),
     updatedAt: serializeDate(rest.updatedAt),
@@ -43,6 +47,17 @@ export function toGalleryBlockPublic(doc: GalleryBlock): GalleryBlockPublic {
     coverPicHorizontal: rest.coverPicHorizontal ?? legacyCover,
     coverPicVertical: rest.coverPicVertical ?? legacyCover,
     captureDate: serializeDate(rest.captureDate),
+    createdAt: serializeDate(rest.createdAt),
+    updatedAt: serializeDate(rest.updatedAt),
+  }
+}
+
+export function toVideoBlockPublic(doc: VideoBlock): VideoBlockPublic {
+  const { _id, ...rest } = doc
+  return {
+    ...rest,
+    id: toId(_id),
+    thumbnailUrl: getVideoThumbnailUrl(rest.videoUrl),
     createdAt: serializeDate(rest.createdAt),
     updatedAt: serializeDate(rest.updatedAt),
   }

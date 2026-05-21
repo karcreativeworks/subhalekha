@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const db = await getDb()
     const collection = db.collection<User>("users")
 
-    const existing = await collection.findOne({ id, clientId })
+    const existing = await collection.findOne({ id })
     if (existing) {
       return NextResponse.json(
         { error: "A user with this id already exists" },

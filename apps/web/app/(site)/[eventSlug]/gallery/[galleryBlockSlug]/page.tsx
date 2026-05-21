@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/site/page-header"
 import { PublicPhotoGridInfinite } from "@/components/site/public-photo-grid-infinite"
 import {
   getPublicEventBySlug,
+  getPublicEventContentGrid,
   getPublicGalleryBlock,
   getPublicMediaForGalleryBlock,
 } from "@/lib/gallery/public-event"
@@ -43,9 +44,15 @@ export default async function GalleryBlockPage({
     notFound()
   }
 
-  const { files, hasMore, total } = await getPublicMediaForGalleryBlock(block, {
-    page: 1,
-  })
+  const [{ files, hasMore, total }, allGridItems] = await Promise.all([
+    getPublicMediaForGalleryBlock(block, { page: 1 }),
+    getPublicEventContentGrid(event),
+  ])
+
+  const currentGalleryHref = `/${event.eventSlug}/gallery/${block.galleryBlockSlug}`
+  const contentGridItems = allGridItems.filter(
+    (item) => item.href !== currentGalleryHref,
+  )
 
   return (
     <>
@@ -65,6 +72,7 @@ export default async function GalleryBlockPage({
         initialPhotos={files}
         initialHasMore={hasMore}
         initialTotal={total}
+        contentGridItems={contentGridItems}
       />
     </>
   )

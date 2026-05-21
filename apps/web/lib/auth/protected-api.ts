@@ -5,6 +5,7 @@ export const protectedApiPathPatterns: RegExp[] = [
   /^\/api\/users$/,
   /^\/api\/events(?:\/|$)/, // includes /api/events/:id/blocks
   /^\/api\/gallery-blocks(?:\/|$)/,
+  /^\/api\/video-blocks(?:\/|$)/,
   /^\/api\/admin-users(?:\/|$)/,
 ]
 

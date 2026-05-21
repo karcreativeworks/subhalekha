@@ -44,12 +44,20 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
+    await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
     const { id } = await params
     const body = (await request.json()) as UpdateEventRequest
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid event id" }, { status: 400 })
+    }
+
+    const db = await getDb()
+    const existing = await db.collection<Event>("events").findOne({
+      _id: new ObjectId(id),
+    })
+    if (!existing) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
     const update: Record<string, unknown> = { updatedAt: new Date() }
@@ -65,7 +73,7 @@ export async function PUT(
       if ("error" in slugResult) {
         return NextResponse.json({ error: slugResult.error }, { status: 400 })
       }
-      if (await isEventSlugTaken(clientId, slugResult.slug, id)) {
+      if (await isEventSlugTaken(slugResult.slug, id)) {
         return NextResponse.json(
           { error: "An event with this slug already exists" },
           { status: 409 },
@@ -114,10 +122,12 @@ export async function PUT(
     if (body.coverPicVertical !== undefined) {
       update.coverPicVertical = body.coverPicVertical.trim()
     }
+    if (body.isVisible !== undefined) {
+      update.isVisible = body.isVisible
+    }
 
-    const db = await getDb()
     const result = await db.collection<Event>("events").findOneAndUpdate(
-      { _id: new ObjectId(id), clientId },
+      { _id: new ObjectId(id) },
       { $set: update },
       { returnDocument: "after" },
     )
@@ -137,7 +147,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
+    await requireAdminAccess(ADMIN_ACCESS.EVENTS_MANAGER)
     const { id } = await params
 
     if (!ObjectId.isValid(id)) {
@@ -147,7 +157,6 @@ export async function DELETE(
     const db = await getDb()
     const result = await db.collection("events").deleteOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
     if (result.deletedCount === 0) {
@@ -156,7 +165,6 @@ export async function DELETE(
 
     await db.collection("galleryBlocks").deleteMany({
       parentEventId: id,
-      clientId,
     })
 
     return NextResponse.json({ success: true })

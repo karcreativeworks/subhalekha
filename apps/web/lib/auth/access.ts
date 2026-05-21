@@ -3,6 +3,7 @@ export const ADMIN_ACCESS = {
   MEDIA_UPLOADER: "mediaUploader",
   EVENTS_MANAGER: "eventsManager",
   GALLERY_BLOCKS_MANAGER: "galleryBlocksManager",
+  VIDEO_BLOCKS_MANAGER: "videoBlocksManager",
   ADMIN_USERS: "adminUsers",
   SUPER_ADMIN: "superAdmin",
 } as const
@@ -15,6 +16,7 @@ export const ALL_ADMIN_ACCESS: AdminAccessKey[] = [
   ADMIN_ACCESS.MEDIA_UPLOADER,
   ADMIN_ACCESS.EVENTS_MANAGER,
   ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
+  ADMIN_ACCESS.VIDEO_BLOCKS_MANAGER,
   ADMIN_ACCESS.ADMIN_USERS,
   ADMIN_ACCESS.SUPER_ADMIN,
 ]
@@ -23,6 +25,7 @@ export const ADMIN_ACCESS_LABELS: Record<AdminAccessKey, string> = {
   [ADMIN_ACCESS.MEDIA_UPLOADER]: "Media Uploader",
   [ADMIN_ACCESS.EVENTS_MANAGER]: "Events",
   [ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER]: "Gallery Blocks",
+  [ADMIN_ACCESS.VIDEO_BLOCKS_MANAGER]: "Video Blocks",
   [ADMIN_ACCESS.ADMIN_USERS]: "Admin Users",
   [ADMIN_ACCESS.SUPER_ADMIN]: "Super Admin",
 }
@@ -32,6 +35,7 @@ export const TAG_ADMIN_ACCESS: AdminAccessKey[] = [
   ADMIN_ACCESS.MEDIA_UPLOADER,
   ADMIN_ACCESS.EVENTS_MANAGER,
   ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
+  ADMIN_ACCESS.VIDEO_BLOCKS_MANAGER,
 ]
 
 /** Permissions that may browse media (e.g. cover image picker). */
@@ -74,6 +78,9 @@ export function getDefaultAdminPath(
   }
   if (hasAccess(access, ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER)) {
     return "/admin/gallery-blocks"
+  }
+  if (hasAccess(access, ADMIN_ACCESS.VIDEO_BLOCKS_MANAGER)) {
+    return "/admin/video-blocks"
   }
   if (hasAccess(access, ADMIN_ACCESS.ADMIN_USERS)) {
     return "/admin/users"

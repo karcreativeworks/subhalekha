@@ -14,6 +14,11 @@ const nextConfig = {
         hostname: "aidev.blr1.digitaloceanspaces.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
+      },
     ],
   },
 }

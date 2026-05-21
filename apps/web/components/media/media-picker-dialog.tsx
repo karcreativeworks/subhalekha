@@ -22,14 +22,15 @@ import { TagFilterDropdown } from "@/components/media/tag-filter-dropdown"
 import { Input } from "@/components/ui/input"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import { createAdminFetcher } from "@/lib/admin/admin-api"
 
 function getFileId(file: MediaFile): string {
   return typeof file._id === "string" ? file._id : file._id?.toString() ?? ""
 }
 
 interface MediaPickerDialogProps {
+  /** Session client id for admin API permission checks. */
+  clientId?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onSelect: (url: string) => void
@@ -39,6 +40,7 @@ interface MediaPickerDialogProps {
 }
 
 export function MediaPickerDialog({
+  clientId,
   open,
   onOpenChange,
   onSelect,
@@ -79,7 +81,12 @@ export function MediaPickerDialog({
   const { data, isLoading } = useSWR<{
     files?: MediaFile[]
     total?: number
-  }>(open ? apiUrl : null, fetcher)
+  }>(
+    open ? apiUrl : null,
+    clientId
+      ? createAdminFetcher(clientId)
+      : (url: string) => fetch(url).then((res) => res.json()),
+  )
 
   const total = data?.total ?? 0
   const files = (data?.files ?? []).filter(

@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb"
 import { NextRequest, NextResponse } from "next/server"
 
+import type { MediaFile } from "@/app/types/media"
 import { requireAdminAccess } from "@/lib/auth/require-access"
 import { getDb } from "@/lib/db/mongodb"
 
@@ -12,7 +13,7 @@ interface BulkUpdateRequest {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    await requireAdminAccess("mediaUploader")
     const body = (await request.json()) as BulkUpdateRequest
     const { fileIds, operation, tags } = body
 
@@ -35,13 +36,13 @@ export async function PATCH(request: NextRequest) {
     })
 
     const db = await getDb()
-    const collection = db.collection("mediaFiles")
-    const query = { _id: { $in: objectIds }, clientId }
-    const existingFiles = await collection.find(query).toArray()
+    const collection = db.collection<MediaFile>("mediaFiles")
+    const idQuery = { _id: { $in: objectIds } }
+    const existingFiles = await collection.find(idQuery).toArray()
 
     if (existingFiles.length !== fileIds.length) {
       return NextResponse.json(
-        { error: "Some files not found or access denied" },
+        { error: "Some files not found" },
         { status: 404 },
       )
     }
@@ -98,7 +99,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const result = await collection.bulkWrite(updateOperations)
-    const updatedFiles = await collection.find(query).toArray()
+    const updatedFiles = await collection.find(idQuery).toArray()
 
     return NextResponse.json({
       success: true,

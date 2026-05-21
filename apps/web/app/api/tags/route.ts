@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const db = await getDb()
     const collection = db.collection<Tag>("tags")
 
-    const existingTag = await collection.findOne({ id, clientId })
+    const existingTag = await collection.findOne({ id })
     if (existingTag) {
       return NextResponse.json(
         { error: "Tag with this id already exists" },

@@ -8,15 +8,22 @@ import {
   GripVertical,
   Images,
   Loader2,
+  Video,
 } from "lucide-react"
 import { toast } from "sonner"
 
-import type { EventPublic, GalleryBlockPublic } from "@/app/types/gallery"
+import type {
+  EventBlockRef,
+  EventBlockType,
+  EventPublic,
+  GalleryBlockPublic,
+  VideoBlockPublic,
+} from "@/app/types/gallery"
 import {
-  blockIdsFromRefs,
   normalizeEventBlockRefs,
   reconcileEventBlockRefs,
   refsFromOrderedBlockIds,
+  resolveEventBlockType,
 } from "@/lib/gallery/event-block-order"
 import {
   Dialog,
@@ -25,75 +32,146 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@workspace/ui/components/button"
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import { adminFetch, createAdminFetcher } from "@/lib/admin/admin-api"
 
 interface EventBlockOrderDialogProps {
+  clientId?: string
   event: EventPublic | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onSaved: () => void
 }
 
+type SortableBlock = {
+  key: string
+  blockId: string
+  blockType: EventBlockType
+  title: string
+  slug?: string
+}
+
+function blockEntryKey(blockId: string, blockType: EventBlockType): string {
+  return `${blockType}:${blockId}`
+}
+
+function refsFromSortableKeys(keys: string[]): EventBlockRef[] {
+  return keys.map((key, blockOrder) => {
+    const [blockType, blockId] = key.split(":") as [EventBlockType, string]
+    return {
+      blockId,
+      blockOrder,
+      ...(blockType === "video" ? { blockType: "video" as const } : {}),
+    }
+  })
+}
+
 export function EventBlockOrderDialog({
+  clientId,
   event,
   open,
   onOpenChange,
   onSaved,
 }: EventBlockOrderDialogProps) {
-  const [orderedIds, setOrderedIds] = useState<string[]>([])
+  const [orderedKeys, setOrderedKeys] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
 
-  const blocksUrl =
-    open && event ? `/api/gallery-blocks?parentEventId=${event.id}` : null
+  const galleryUrl =
+    open && event && clientId
+      ? `/api/gallery-blocks?parentEventId=${event.id}`
+      : null
+  const videoUrl =
+    open && event && clientId
+      ? `/api/video-blocks?parentEventId=${event.id}`
+      : null
 
-  const { data: blocks, isLoading, mutate } = useSWR<GalleryBlockPublic[]>(
-    blocksUrl,
-    fetcher,
+  const { data: galleryBlocks, isLoading: galleryLoading } = useSWR<
+    GalleryBlockPublic[]
+  >(galleryUrl, createAdminFetcher(clientId))
+
+  const { data: videoBlocks, isLoading: videoLoading } = useSWR<VideoBlockPublic[]>(
+    videoUrl,
+    createAdminFetcher(clientId),
   )
 
-  const fetchedIdsKey = useMemo(
-    () => (blocks ?? []).map((block) => block.id).join(","),
-    [blocks],
+  const isLoading = galleryLoading || videoLoading
+
+  const sortableBlocks = useMemo((): SortableBlock[] => {
+    const items: SortableBlock[] = []
+    for (const block of galleryBlocks ?? []) {
+      items.push({
+        key: blockEntryKey(block.id, "gallery"),
+        blockId: block.id,
+        blockType: "gallery",
+        title: block.title,
+        slug: block.galleryBlockSlug,
+      })
+    }
+    for (const block of videoBlocks ?? []) {
+      items.push({
+        key: blockEntryKey(block.id, "video"),
+        blockId: block.id,
+        blockType: "video",
+        title: block.title,
+        slug: block.videoBlockSlug,
+      })
+    }
+    return items
+  }, [galleryBlocks, videoBlocks])
+
+  const fetchedKeysKey = useMemo(
+    () => sortableBlocks.map((b) => b.key).join(","),
+    [sortableBlocks],
   )
 
   const storedOrderKey = useMemo(
-    () => (event ? blockIdsFromRefs(event.blocks).join(",") : ""),
+    () =>
+      event
+        ? normalizeEventBlockRefs(event.blocks)
+            .map((entry) =>
+              blockEntryKey(entry.blockId, resolveEventBlockType(entry)),
+            )
+            .join(",")
+        : "",
     [event?.id, event?.blocks],
   )
 
   useEffect(() => {
     if (open) return
-    setOrderedIds([])
+    setOrderedKeys([])
   }, [open])
 
   useEffect(() => {
-    if (!open || !event || isLoading || !blocks) return
+    if (!open || !event || isLoading) return
 
-    const blockIds = blocks.map((block) => block.id)
-    const reconciled = reconcileEventBlockRefs(event.blocks, blockIds)
-    const nextIds = reconciled.map((entry) => entry.blockId)
+    const identities = sortableBlocks.map((b) => ({
+      blockId: b.blockId,
+      blockType: b.blockType,
+    }))
+    const reconciled = reconcileEventBlockRefs(event.blocks, identities)
+    const nextKeys = reconciled.map((entry) =>
+      blockEntryKey(entry.blockId, resolveEventBlockType(entry)),
+    )
 
-    setOrderedIds((prev) => {
+    setOrderedKeys((prev) => {
       if (
-        prev.length === nextIds.length &&
-        prev.every((id, index) => id === nextIds[index])
+        prev.length === nextKeys.length &&
+        prev.every((key, index) => key === nextKeys[index])
       ) {
         return prev
       }
-      return nextIds
+      return nextKeys
     })
-    // event + blocks read from closure; keys capture meaningful changes only
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, event?.id, isLoading, fetchedIdsKey, storedOrderKey])
+  }, [open, event?.id, isLoading, fetchedKeysKey, storedOrderKey])
 
-  const blockById = new Map((blocks ?? []).map((block) => [block.id, block]))
+  const blockByKey = new Map(sortableBlocks.map((block) => [block.key, block]))
 
   const move = (index: number, direction: -1 | 1) => {
     const nextIndex = index + direction
-    if (nextIndex < 0 || nextIndex >= orderedIds.length) return
-    setOrderedIds((prev) => {
+    if (nextIndex < 0 || nextIndex >= orderedKeys.length) return
+    setOrderedKeys((prev) => {
       const next = [...prev]
       const [removed] = next.splice(index, 1)
       if (removed) next.splice(nextIndex, 0, removed)
@@ -106,23 +184,26 @@ export function EventBlockOrderDialog({
 
     setIsSaving(true)
     try {
-      const blocksPayload = refsFromOrderedBlockIds(orderedIds)
-      const response = await fetch(`/api/events/${event.id}/blocks`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          blocks: normalizeEventBlockRefs(blocksPayload),
-        }),
-      })
+      const blocksPayload = refsFromSortableKeys(orderedKeys)
+      const response = await adminFetch(
+        `/api/events/${event.id}/blocks`,
+        clientId,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blocks: normalizeEventBlockRefs(blocksPayload),
+          }),
+        },
+      )
 
       if (!response.ok) {
         const data = (await response.json()) as { error?: string }
         throw new Error(data.error ?? "Failed to save block order")
       }
 
-      toast.success("Gallery block order saved")
+      toast.success("Content block order saved")
       onSaved()
-      void mutate()
       onOpenChange(false)
     } catch (error) {
       toast.error(
@@ -139,7 +220,7 @@ export function EventBlockOrderDialog({
         <DialogHeader className="border-b px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Images className="size-5" />
-            Sort gallery blocks
+            Sort content blocks
           </DialogTitle>
           {event ? (
             <p className="text-sm text-muted-foreground">{event.title}</p>
@@ -151,27 +232,42 @@ export function EventBlockOrderDialog({
             <div className="flex justify-center py-12">
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
-          ) : orderedIds.length === 0 ? (
+          ) : orderedKeys.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No gallery blocks linked to this event yet.
+              No gallery or video blocks linked to this event yet.
             </p>
           ) : (
             <ul className="space-y-2">
-              {orderedIds.map((blockId, index) => {
-                const block = blockById.get(blockId)
+              {orderedKeys.map((key, index) => {
+                const block = blockByKey.get(key)
                 return (
                   <li
-                    key={blockId}
+                    key={key}
                     className="flex items-center gap-2 rounded-xl border bg-card p-3"
                   >
                     <GripVertical className="size-4 shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">
-                        {block?.title ?? blockId}
-                      </p>
-                      {block?.galleryBlockSlug ? (
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-medium">
+                          {block?.title ?? key}
+                        </p>
+                        <Badge variant="secondary" className="shrink-0 text-[10px]">
+                          {block?.blockType === "video" ? (
+                            <>
+                              <Video className="mr-1 inline size-3" />
+                              Video
+                            </>
+                          ) : (
+                            <>
+                              <Images className="mr-1 inline size-3" />
+                              Gallery
+                            </>
+                          )}
+                        </Badge>
+                      </div>
+                      {block?.slug ? (
                         <p className="truncate font-mono text-xs text-muted-foreground">
-                          {block.galleryBlockSlug}
+                          {block.slug}
                         </p>
                       ) : null}
                     </div>
@@ -192,7 +288,7 @@ export function EventBlockOrderDialog({
                         variant="outline"
                         size="icon"
                         className="size-8"
-                        disabled={index === orderedIds.length - 1}
+                        disabled={index === orderedKeys.length - 1}
                         onClick={() => move(index, 1)}
                         aria-label="Move down"
                       >
@@ -212,7 +308,7 @@ export function EventBlockOrderDialog({
           </Button>
           <Button
             onClick={() => void handleSave()}
-            disabled={isSaving || !orderedIds.length}
+            disabled={isSaving || !orderedKeys.length}
           >
             {isSaving ? (
               <>

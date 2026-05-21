@@ -2,17 +2,12 @@
 
 import { useMemo, useState } from "react"
 import useSWR from "swr"
-import { Images, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
+import { Loader2, Pencil, Play, Plus, Trash2, Video } from "lucide-react"
 import { toast } from "sonner"
 
-import type { EventPublic, GalleryBlockPublic, Team } from "@/app/types/gallery"
-import { toDateInputValue } from "@/lib/gallery/format-dates"
+import type { EventPublic, VideoBlockPublic } from "@/app/types/gallery"
 import { normalizeSlug } from "@/lib/gallery/slug"
-import { TEAM_LABELS } from "@/lib/gallery/team"
-import { TeamSelect } from "@/components/gallery/team-select"
-import { CoverImageField } from "@/components/media/cover-image-field"
-import { TagMultiSelect } from "@/components/media/tag-multi-select"
-import { Badge } from "@/components/ui/badge"
+import { getVideoThumbnailUrl } from "@/lib/media/video-url"
 import {
   Dialog,
   DialogContent,
@@ -32,36 +27,26 @@ import {
 
 type FormState = {
   parentEventId: string
-  coverPicHorizontal: string
-  coverPicVertical: string
   title: string
-  galleryBlockSlug: string
+  videoBlockSlug: string
+  videoUrl: string
   subtitle: string
   description: string
-  tags: string[]
-  team: Team
-  captureDate: string
-  bgMusic: string
 }
 
 const emptyForm = (): FormState => ({
   parentEventId: "",
-  coverPicHorizontal: "",
-  coverPicVertical: "",
   title: "",
-  galleryBlockSlug: "",
+  videoBlockSlug: "",
+  videoUrl: "",
   subtitle: "",
   description: "",
-  tags: [],
-  team: "both",
-  captureDate: "",
-  bgMusic: "",
 })
 
-export function GalleryBlocksManager() {
+export function VideoBlocksManager() {
   const clientId = useAdminClientId()
-  const { data: blocks = [], isLoading, mutate } = useSWR<GalleryBlockPublic[]>(
-    clientId ? "/api/gallery-blocks" : null,
+  const { data: blocks = [], isLoading, mutate } = useSWR<VideoBlockPublic[]>(
+    clientId ? "/api/video-blocks" : null,
     createAdminFetcher(clientId),
   )
   const { data: events = [] } = useSWR<EventPublic[]>(
@@ -82,26 +67,23 @@ export function GalleryBlocksManager() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [isSaving, setIsSaving] = useState(false)
 
+  const previewThumbnail = getVideoThumbnailUrl(form.videoUrl)
+
   const openCreate = () => {
     setEditingId(null)
     setForm(emptyForm())
     setDialogOpen(true)
   }
 
-  const openEdit = (block: GalleryBlockPublic) => {
+  const openEdit = (block: VideoBlockPublic) => {
     setEditingId(block.id)
     setForm({
       parentEventId: block.parentEventId,
-      coverPicHorizontal: block.coverPicHorizontal,
-      coverPicVertical: block.coverPicVertical,
       title: block.title,
-      galleryBlockSlug: block.galleryBlockSlug ?? "",
+      videoBlockSlug: block.videoBlockSlug ?? "",
+      videoUrl: block.videoUrl,
       subtitle: block.subtitle ?? "",
       description: block.description ?? "",
-      tags: block.tags ?? [],
-      team: block.team,
-      captureDate: toDateInputValue(block.captureDate),
-      bgMusic: block.bgMusic ?? "",
     })
     setDialogOpen(true)
   }
@@ -111,25 +93,18 @@ export function GalleryBlocksManager() {
       toast.error("Title is required")
       return
     }
-    if (!form.coverPicHorizontal.trim()) {
-      toast.error("Horizontal cover image is required")
-      return
-    }
-    if (!form.coverPicVertical.trim()) {
-      toast.error("Vertical cover image is required")
-      return
-    }
     if (!form.parentEventId) {
       toast.error("Parent event is required")
       return
     }
-    if (!form.captureDate) {
-      toast.error("Capture date is required")
+    if (!form.videoUrl.trim()) {
+      toast.error("Video URL is required")
       return
     }
-    const galleryBlockSlug = normalizeSlug(form.galleryBlockSlug)
-    if (!galleryBlockSlug) {
-      toast.error("Gallery block slug is required")
+
+    const slug = normalizeSlug(form.videoBlockSlug || form.title)
+    if (!slug) {
+      toast.error("URL slug is required")
       return
     }
 
@@ -137,20 +112,15 @@ export function GalleryBlocksManager() {
     try {
       const payload = {
         parentEventId: form.parentEventId,
-        coverPicHorizontal: form.coverPicHorizontal.trim(),
-        coverPicVertical: form.coverPicVertical.trim(),
         title: form.title.trim(),
-        galleryBlockSlug,
+        videoBlockSlug: slug,
+        videoUrl: form.videoUrl.trim(),
         subtitle: form.subtitle.trim() || undefined,
         description: form.description.trim() || undefined,
-        tags: form.tags,
-        team: form.team,
-        captureDate: form.captureDate,
-        bgMusic: form.bgMusic.trim() || undefined,
       }
 
       const response = await adminFetch(
-        editingId ? `/api/gallery-blocks/${editingId}` : "/api/gallery-blocks",
+        editingId ? `/api/video-blocks/${editingId}` : "/api/video-blocks",
         clientId,
         {
           method: editingId ? "PUT" : "POST",
@@ -161,15 +131,15 @@ export function GalleryBlocksManager() {
 
       if (!response.ok) {
         const data = (await response.json()) as { error?: string }
-        throw new Error(data.error ?? "Save failed")
+        throw new Error(data.error ?? "Failed to save video block")
       }
 
-      toast.success(editingId ? "Gallery block updated" : "Gallery block created")
-      await mutate()
+      toast.success(editingId ? "Video block updated" : "Video block created")
       setDialogOpen(false)
+      void mutate()
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to save gallery block",
+        error instanceof Error ? error.message : "Failed to save video block",
       )
     } finally {
       setIsSaving(false)
@@ -177,38 +147,45 @@ export function GalleryBlocksManager() {
   }
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete gallery block "${title}"?`)) return
+    if (!confirm(`Delete video block “${title}”?`)) return
 
-    const response = await adminFetch(`/api/gallery-blocks/${id}`, clientId, {
-      method: "DELETE",
-    })
-    if (response.ok) {
-      toast.success("Gallery block deleted")
+    try {
+      const response = await adminFetch(
+        `/api/video-blocks/${id}`,
+        clientId,
+        { method: "DELETE" },
+      )
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string }
+        throw new Error(data.error ?? "Failed to delete")
+      }
+      toast.success("Video block deleted")
       void mutate()
-    } else {
-      const data = (await response.json()) as { error?: string }
-      toast.error(data.error ?? "Failed to delete gallery block")
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete video block",
+      )
     }
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col p-6">
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold">Gallery blocks</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage gallery sections linked to events.
+          <h1 className="text-2xl font-semibold tracking-tight">Video blocks</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Add YouTube or other video links. Thumbnails are generated from YouTube URLs.
           </p>
         </div>
         <Button onClick={openCreate} disabled={!events.length}>
           <Plus className="mr-2 size-4" />
-          Add gallery block
+          Add video
         </Button>
       </div>
 
       {!events.length && !isLoading ? (
         <p className="mb-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-          Create at least one event before adding gallery blocks.
+          Create at least one event before adding videos.
         </p>
       ) : null}
 
@@ -218,19 +195,17 @@ export function GalleryBlocksManager() {
         </div>
       ) : blocks.length === 0 ? (
         <p className="py-12 text-center text-muted-foreground">
-          No gallery blocks yet.
+          No video blocks yet.
         </p>
       ) : (
         <div className="overflow-hidden rounded-2xl border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left">
               <tr>
-                <th className="px-4 py-3 font-medium">Covers</th>
+                <th className="px-4 py-3 font-medium">Preview</th>
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium">Event</th>
-                <th className="px-4 py-3 font-medium">Capture date</th>
-                <th className="px-4 py-3 font-medium">Team</th>
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
@@ -238,29 +213,16 @@ export function GalleryBlocksManager() {
               {blocks.map((block) => (
                 <tr key={block.id} className="border-t">
                   <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      {block.coverPicHorizontal ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={block.coverPicHorizontal}
-                          alt="Horizontal cover"
-                          title="Horizontal"
-                          className="h-12 w-16 rounded-lg object-cover"
-                        />
-                      ) : null}
-                      {block.coverPicVertical ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={block.coverPicVertical}
-                          alt="Vertical cover"
-                          title="Vertical"
-                          className="h-12 w-9 rounded-lg object-cover"
-                        />
-                      ) : null}
-                      {!block.coverPicHorizontal && !block.coverPicVertical
-                        ? "—"
-                        : null}
-                    </div>
+                    {block.thumbnailUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={block.thumbnailUrl}
+                        alt=""
+                        className="aspect-square h-12 w-12 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{block.title}</p>
@@ -271,17 +233,11 @@ export function GalleryBlocksManager() {
                     ) : null}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs">
-                    {block.galleryBlockSlug || "—"}
+                    {block.videoBlockSlug || "—"}
                   </td>
                   <td className="px-4 py-3">
                     {eventTitleById.get(block.parentEventId) ??
                       block.parentEventId}
-                  </td>
-                  <td className="px-4 py-3">
-                    {toDateInputValue(block.captureDate) || "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant="secondary">{TEAM_LABELS[block.team]}</Badge>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
@@ -312,16 +268,16 @@ export function GalleryBlocksManager() {
         <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Images className="size-5" />
-              {editingId ? "Edit gallery block" : "New gallery block"}
+              <Video className="size-5" />
+              {editingId ? "Edit video block" : "New video block"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="block-parent-event">Parent event</Label>
+              <Label htmlFor="video-parent-event">Parent event</Label>
               <select
-                id="block-parent-event"
+                id="video-parent-event"
                 value={form.parentEventId}
                 onChange={(event) =>
                   setForm((prev) => ({
@@ -339,69 +295,76 @@ export function GalleryBlocksManager() {
                 ))}
               </select>
             </div>
-            <CoverImageField
-              clientId={clientId}
-              id="block-cover-horizontal"
-              label="Cover image (horizontal)"
-              value={form.coverPicHorizontal}
-              onChange={(coverPicHorizontal) =>
-                setForm((prev) => ({ ...prev, coverPicHorizontal }))
-              }
-            />
-            <CoverImageField
-              clientId={clientId}
-              id="block-cover-vertical"
-              label="Cover image (vertical)"
-              value={form.coverPicVertical}
-              onChange={(coverPicVertical) =>
-                setForm((prev) => ({ ...prev, coverPicVertical }))
-              }
-            />
+
             <div className="space-y-2">
-              <Label htmlFor="block-title">Title</Label>
+              <Label htmlFor="video-title">Title</Label>
               <Input
-                id="block-title"
+                id="video-title"
                 value={form.title}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, title: event.target.value }))
                 }
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="block-slug">Gallery block slug</Label>
+              <Label htmlFor="video-slug">URL slug</Label>
               <Input
-                id="block-slug"
-                value={form.galleryBlockSlug}
+                id="video-slug"
+                value={form.videoBlockSlug}
+                placeholder="auto-from-title"
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
-                    galleryBlockSlug: event.target.value,
+                    videoBlockSlug: event.target.value,
                   }))
                 }
-                onBlur={() =>
-                  setForm((prev) => ({
-                    ...prev,
-                    galleryBlockSlug: normalizeSlug(prev.galleryBlockSlug),
-                  }))
-                }
-                placeholder="e.g. ceremony-highlights"
-                className="font-mono text-sm"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="block-subtitle">Subtitle</Label>
+              <Label htmlFor="video-url">Video URL</Label>
               <Input
-                id="block-subtitle"
+                id="video-url"
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=…"
+                value={form.videoUrl}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, videoUrl: event.target.value }))
+                }
+              />
+              <p className="text-muted-foreground text-xs">
+                Supports YouTube links (thumbnail preview). Other HTTPS video URLs
+                can be saved but may not show a preview.
+              </p>
+            </div>
+
+            {previewThumbnail ? (
+              <div className="overflow-hidden rounded-xl border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={previewThumbnail}
+                  alt="Video thumbnail preview"
+                  className="aspect-video w-full object-cover"
+                />
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <Label htmlFor="video-subtitle">Subtitle</Label>
+              <Input
+                id="video-subtitle"
                 value={form.subtitle}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, subtitle: event.target.value }))
                 }
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="block-description">Description</Label>
+              <Label htmlFor="video-description">Description</Label>
               <Textarea
-                id="block-description"
+                id="video-description"
                 value={form.description}
                 onChange={(event) =>
                   setForm((prev) => ({
@@ -409,47 +372,7 @@ export function GalleryBlocksManager() {
                     description: event.target.value,
                   }))
                 }
-                rows={4}
               />
-            </div>
-            <TagMultiSelect
-              clientId={clientId}
-              selectedTags={form.tags}
-              onTagsChange={(tags) => setForm((prev) => ({ ...prev, tags }))}
-            />
-            <TeamSelect
-              value={form.team}
-              onChange={(team) => setForm((prev) => ({ ...prev, team }))}
-            />
-            <div className="space-y-2">
-              <Label htmlFor="block-capture-date">Capture date</Label>
-              <Input
-                id="block-capture-date"
-                type="date"
-                value={form.captureDate}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    captureDate: event.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="block-bg-music">Slideshow background music</Label>
-              <Input
-                id="block-bg-music"
-                type="url"
-                value={form.bgMusic}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, bgMusic: event.target.value }))
-                }
-                placeholder="https://…/music.mp3"
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Optional. Plays when visitors start slideshow on the public gallery.
-              </p>
             </div>
           </div>
 

@@ -151,7 +151,7 @@ function LandingEventCard({
         "group relative overflow-hidden rounded-xl",
         isVertical
           ? "col-span-1 h-[100px] sm:h-[350px]"
-          : "col-span-2 h-24 sm:h-28",
+          : "col-span-2 h-[100px] sm:h-[350px]",
       )}
     >
       <div className="relative h-full w-full bg-black/20">

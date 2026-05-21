@@ -32,7 +32,7 @@ const DEFAULT_SLIDESHOW_SECONDS = 3
 const DEFAULT_SLIDESHOW_BG_MUSIC = "/songs/instrumental.mp3"
 const PRESENTER_HISTORY_STATE = "presenter-view"
 
-function resolveSlideshowMusicUrl(bgMusicUrl?: string) {
+export function resolveSlideshowMusicUrl(bgMusicUrl?: string) {
   const trimmed = bgMusicUrl?.trim()
   return trimmed || DEFAULT_SLIDESHOW_BG_MUSIC
 }
@@ -63,6 +63,8 @@ export interface PresenterViewProps {
   onOpenChange: (open: boolean) => void
   onIndexChange?: (index: number) => void
   bgMusicUrl?: string
+  /** Audio element rendered outside the dialog (required for reliable playback). */
+  audioRef?: React.RefObject<HTMLAudioElement | null>
   /** Auto-start slideshow when opened (e.g. gallery Slideshow button). */
   autoStartSlideshow?: boolean
   defaultSlideshowSeconds?: number
@@ -198,6 +200,7 @@ export function PresenterView({
   onOpenChange,
   onIndexChange,
   bgMusicUrl,
+  audioRef: externalAudioRef,
   autoStartSlideshow = false,
   defaultSlideshowSeconds = DEFAULT_SLIDESHOW_SECONDS,
 }: PresenterViewProps) {
@@ -221,7 +224,8 @@ export function PresenterView({
   const fullscreenRootRef = useRef<HTMLDivElement>(null)
   const historyPushedRef = useRef(false)
   const indexRef = useRef(0)
-  const audioRef = useRef<HTMLAudioElement>(null)
+  const internalAudioRef = useRef<HTMLAudioElement>(null)
+  const audioRef = externalAudioRef ?? internalAudioRef
   const speedMenuRef = useRef<HTMLDivElement>(null)
   const pointerRef = useRef<{
     id: number
@@ -469,13 +473,15 @@ export function PresenterView({
     const audio = audioRef.current
     if (!audio) return
 
+    audio.muted = audioMuted
+
     if (open && slideshowPlaying && !audioMuted) {
       void audio.play().catch(() => { })
       return
     }
 
     audio.pause()
-  }, [open, slideshowPlaying, audioMuted, slideshowMusicUrl])
+  }, [open, slideshowPlaying, audioMuted, slideshowMusicUrl, audioRef])
 
   useEffect(() => {
     if (!speedMenuOpen) return
@@ -489,11 +495,6 @@ export function PresenterView({
     window.addEventListener("pointerdown", onPointerDown)
     return () => window.removeEventListener("pointerdown", onPointerDown)
   }, [speedMenuOpen])
-
-  const handleDownload = useCallback(() => {
-    if (!downloadUrl) return
-    window.open(downloadUrl, "_blank", "noopener,noreferrer")
-  }, [downloadUrl])
 
   const toggleSlideshow = useCallback(() => {
     if (photoCount <= 1) return
@@ -755,13 +756,26 @@ export function PresenterView({
   if (!photoCount) return null
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (nextOpen) onOpenChange(true)
-      }}
-    >
-      <DialogPortal>
+    <>
+      {!externalAudioRef ? (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <audio
+          ref={internalAudioRef}
+          src={slideshowMusicUrl}
+          loop
+          preload="auto"
+          className="sr-only"
+          aria-hidden
+        />
+      ) : null}
+
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen) onOpenChange(true)
+        }}
+      >
+        <DialogPortal>
         <DialogPrimitive.Overlay
           className={cn(
             "fixed inset-0 z-50 bg-black/80 backdrop-blur-md",
@@ -799,15 +813,6 @@ export function PresenterView({
             {caption ||
               "Gallery photo viewer. Space toggles slideshow. Click black area left or right of the image to change photos. Arrow keys: left/right photos, up/down zoom. Use the close button to exit."}
           </DialogPrimitive.Description>
-
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio
-            ref={audioRef}
-            src={slideshowMusicUrl}
-            loop
-            preload="auto"
-            muted={audioMuted}
-          />
 
           <div
             ref={fullscreenRootRef}
@@ -1081,24 +1086,25 @@ export function PresenterView({
                       <Volume2 className="size-5" />
                     )}
                   </button>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleDownload()
-                    }}
-                    disabled={!downloadUrl}
-                    className={toolbarButtonClass}
-                    aria-label="Open photo in new tab"
-                  >
-                    <Download className="size-5" />
-                  </button>
+                  {downloadUrl ? (
+                    <a
+                      href={downloadUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                      aria-label="Open photo in new tab"
+                    >
+                      <Download className="size-5" />
+                    </a>
+                  ) : null}
                 </div>
               </div>
             </div>
           </div>
         </DialogPrimitive.Content>
-      </DialogPortal>
-    </Dialog>
+        </DialogPortal>
+      </Dialog>
+    </>
   )
 }

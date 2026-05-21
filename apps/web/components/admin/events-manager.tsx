@@ -32,8 +32,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@workspace/ui/components/button"
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import {
+  adminFetch,
+  createAdminFetcher,
+  useAdminClientId,
+} from "@/lib/admin/admin-api"
 
 type FormState = {
   title: string
@@ -46,6 +49,7 @@ type FormState = {
   team: Team
   eventDate: string
   eventTime: string
+  isVisible: boolean
 }
 
 const emptyForm = (): FormState => ({
@@ -59,12 +63,14 @@ const emptyForm = (): FormState => ({
   team: "both",
   eventDate: "",
   eventTime: "",
+  isVisible: false,
 })
 
 export function EventsManager() {
+  const clientId = useAdminClientId()
   const { data: events = [], isLoading, mutate } = useSWR<EventPublic[]>(
-    "/api/events",
-    fetcher,
+    clientId ? "/api/events" : null,
+    createAdminFetcher(clientId),
   )
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -92,6 +98,7 @@ export function EventsManager() {
       team: event.team,
       eventDate: toDateInputValue(event.eventDate),
       eventTime: toTimeInputValue(event.eventTime),
+      isVisible: event.isVisible,
     })
     setDialogOpen(true)
   }
@@ -128,10 +135,12 @@ export function EventsManager() {
         team: form.team,
         eventDate: form.eventDate,
         eventTime: form.eventTime.trim(),
+        isVisible: form.isVisible,
       }
 
-      const response = await fetch(
+      const response = await adminFetch(
         editingId ? `/api/events/${editingId}` : "/api/events",
+        clientId,
         {
           method: editingId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -165,7 +174,9 @@ export function EventsManager() {
       return
     }
 
-    const response = await fetch(`/api/events/${id}`, { method: "DELETE" })
+    const response = await adminFetch(`/api/events/${id}`, clientId, {
+      method: "DELETE",
+    })
     if (response.ok) {
       toast.success("Event deleted")
       void mutate()
@@ -208,6 +219,7 @@ export function EventsManager() {
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Time</th>
                 <th className="px-4 py-3 font-medium">Team</th>
+                <th className="px-4 py-3 font-medium">Public</th>
                 <th className="px-4 py-3 font-medium">Tags</th>
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
@@ -232,6 +244,11 @@ export function EventsManager() {
                   <td className="px-4 py-3">{event.eventTime}</td>
                   <td className="px-4 py-3">
                     <Badge variant="secondary">{TEAM_LABELS[event.team]}</Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant={event.isVisible ? "default" : "outline"}>
+                      {event.isVisible ? "Visible" : "Hidden"}
+                    </Badge>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
@@ -345,6 +362,7 @@ export function EventsManager() {
               />
             </div>
             <CoverImageField
+              clientId={clientId}
               id="event-cover-horizontal"
               label="Cover image (horizontal)"
               value={form.coverPicHorizontal}
@@ -353,6 +371,7 @@ export function EventsManager() {
               }
             />
             <CoverImageField
+              clientId={clientId}
               id="event-cover-vertical"
               label="Cover image (vertical)"
               value={form.coverPicVertical}
@@ -361,6 +380,7 @@ export function EventsManager() {
               }
             />
             <TagMultiSelect
+              clientId={clientId}
               selectedTags={form.tags}
               onTagsChange={(tags) => setForm((prev) => ({ ...prev, tags }))}
             />
@@ -368,6 +388,23 @@ export function EventsManager() {
               value={form.team}
               onChange={(team) => setForm((prev) => ({ ...prev, team }))}
             />
+            <div className="flex items-center gap-2">
+              <input
+                id="event-visible"
+                type="checkbox"
+                checked={form.isVisible}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    isVisible: event.target.checked,
+                  }))
+                }
+                className="size-4 rounded border"
+              />
+              <Label htmlFor="event-visible" className="cursor-pointer">
+                Visible on public site
+              </Label>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="event-date">Event date</Label>
@@ -419,6 +456,7 @@ export function EventsManager() {
       </Dialog>
 
       <EventBlockOrderDialog
+        clientId={clientId}
         event={orderEvent}
         open={orderDialogOpen}
         onOpenChange={setOrderDialogOpen}

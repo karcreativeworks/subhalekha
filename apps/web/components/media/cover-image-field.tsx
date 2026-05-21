@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@workspace/ui/components/button"
 
 interface CoverImageFieldProps {
+  /** Session client id for admin media picker API calls. */
+  clientId?: string
   id?: string
   label?: string
   value: string
@@ -17,6 +19,7 @@ interface CoverImageFieldProps {
 }
 
 export function CoverImageField({
+  clientId,
   id = "cover-image",
   label = "Cover image URL",
   value,
@@ -60,6 +63,7 @@ export function CoverImageField({
       </div>
 
       <MediaPickerDialog
+        clientId={clientId}
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         selectedUrl={value}

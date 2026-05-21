@@ -3,8 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Play } from "lucide-react"
 
+import type { EventContentGridItem } from "@/app/types/gallery"
 import type { MediaFile } from "@/app/types/media"
-import { PresenterView } from "@/components/site/presenter-view"
+import { EventContentGrid } from "@/components/site/event-content-grid"
+import {
+  PresenterView,
+  resolveSlideshowMusicUrl,
+} from "@/components/site/presenter-view"
+import { MobileBottomBar } from "@/components/site/mobile-bottom-bar"
 import { PublicPhotoGrid } from "@/components/site/public-photo-grid"
 import { glassPanel } from "@/components/site/glass"
 import {
@@ -29,6 +35,8 @@ interface PublicPhotoGridInfiniteProps {
   initialPhotos: MediaFile[]
   initialHasMore: boolean
   initialTotal: number
+  /** Other galleries & videos for this event (shown below the photo grid). */
+  contentGridItems?: EventContentGridItem[]
   className?: string
 }
 
@@ -43,6 +51,7 @@ export function PublicPhotoGridInfinite({
   initialPhotos,
   initialHasMore,
   initialTotal,
+  contentGridItems = [],
   className,
 }: PublicPhotoGridInfiniteProps) {
   const [photos, setPhotos] = useState(initialPhotos)
@@ -55,6 +64,7 @@ export function PublicPhotoGridInfinite({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const slideshowAudioRef = useRef<HTMLAudioElement>(null)
   const loadingRef = useRef(false)
   const hasMoreRef = useRef(hasMore)
   const pageRef = useRef(page)
@@ -151,10 +161,12 @@ export function PublicPhotoGridInfinite({
     return () => observer.disconnect()
   }, [hasMore, loadMoreUntilCaughtUp])
 
-  const loadedLabel = useMemo(() => {
-    if (total === 0) return null
-    return `${photos.length} of ${total} photos`
-  }, [photos.length, total])
+  const slideshowMusicUrl = useMemo(
+    () => resolveSlideshowMusicUrl(bgMusicUrl),
+    [bgMusicUrl],
+  )
+
+  const canSlideshow = photos.length > 1
 
   const openPhoto = useCallback((index: number) => {
     setAutoStartSlideshow(false)
@@ -163,43 +175,91 @@ export function PublicPhotoGridInfinite({
   }, [])
 
   const openSlideshow = useCallback(() => {
+    if (!canSlideshow) return
+
+    const audio = slideshowAudioRef.current
+    if (audio) {
+      audio.muted = false
+      audio.currentTime = 0
+      void audio.play().catch(() => { })
+    }
+
     setPresenterIndex(0)
     setAutoStartSlideshow(true)
     setPresenterOpen(true)
-  }, [])
+  }, [canSlideshow])
+
+  const contentGridFooter =
+    contentGridItems.length > 0 ? (
+      <section className="flex flex-col gap-4">
+        <h2 className="px-4 text-lg font-semibold tracking-tight md:px-6">
+          Explore Other Albums..
+        </h2>
+        <EventContentGrid items={contentGridItems} />
+      </section>
+    ) : null
 
   if (!photos.length) {
     return (
-      <div
-        className={cn(
-          glassPanel("rounded-2xl p-10 text-center"),
-          className,
-        )}
-      >
-        <p className="text-muted-foreground text-sm">
-          No photos in this gallery yet.
-        </p>
+      <div className={cn("flex flex-col gap-8", className)}>
+        <div className={glassPanel("rounded-2xl p-10 text-center")}>
+          <p className="text-muted-foreground text-sm">
+            No photos in this gallery yet.
+          </p>
+        </div>
+        {contentGridFooter}
       </div>
     )
   }
 
+  const slideshowButtonClass = cn(
+    "inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-colors",
+    "bg-white text-black shadow-sm",
+    "hover:bg-white/90 active:bg-white/80",
+    "disabled:pointer-events-none disabled:opacity-40",
+  )
+
+  const playSlideshowButton = (
+    <button
+      type="button"
+      onClick={openSlideshow}
+      disabled={!canSlideshow}
+      className={slideshowButtonClass}
+      aria-label="Play slideshow fullscreen"
+    >
+      <Play className="size-4 shrink-0 fill-current" />
+      Play Slideshow
+    </button>
+  )
+
   return (
-    <div className={cn("flex flex-col gap-4", className)}>
-      {/* <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={openSlideshow}
-          className={cn(
-            glassPanel(
-              "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors hover:bg-white/10",
-            ),
-          )}
-          aria-label="Play slideshow fullscreen"
-        >
-          <Play className="size-4 fill-current" />
-          Slideshow
-        </button>
-      </div> */}
+    <div
+      className={cn(
+        "relative flex flex-col gap-4",
+        canSlideshow && "pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0",
+        className,
+      )}
+    >
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <audio
+        ref={slideshowAudioRef}
+        src={slideshowMusicUrl}
+        loop
+        preload="auto"
+        className="sr-only"
+        aria-hidden
+      />
+
+      <div
+        className="pointer-events-none fixed right-4 top-1/2 z-40 hidden -translate-y-1/2 md:block"
+        aria-hidden={!canSlideshow}
+      >
+        <div className="pointer-events-auto">{playSlideshowButton}</div>
+      </div>
+
+      <MobileBottomBar hidden={!canSlideshow}>
+        {playSlideshowButton}
+      </MobileBottomBar>
 
       <PublicPhotoGrid mediaFiles={photos} onPhotoClick={openPhoto} />
 
@@ -209,10 +269,14 @@ export function PublicPhotoGridInfinite({
         index={presenterIndex}
         onOpenChange={(open) => {
           setPresenterOpen(open)
-          if (!open) setAutoStartSlideshow(false)
+          if (!open) {
+            setAutoStartSlideshow(false)
+            slideshowAudioRef.current?.pause()
+          }
         }}
         onIndexChange={setPresenterIndex}
         bgMusicUrl={bgMusicUrl}
+        audioRef={slideshowAudioRef}
         autoStartSlideshow={autoStartSlideshow}
         defaultSlideshowSeconds={3}
       />
@@ -237,10 +301,9 @@ export function PublicPhotoGridInfinite({
             {error}
           </button>
         ) : null}
-        {!hasMore && !loading ? (
-          <p className="text-muted-foreground text-xs">You&apos;ve seen all photos</p>
-        ) : null}
       </div>
+
+      {contentGridFooter}
     </div>
   )
 }

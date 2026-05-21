@@ -46,7 +46,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    await requireAdminAccess("mediaUploader")
     const { id } = await params
     const body = (await request.json()) as UpdateMediaFileRequest
 
@@ -62,8 +62,15 @@ export async function PUT(
     if (body.fileName !== undefined) update.fileName = body.fileName
 
     const db = await getDb()
+    const existing = await db.collection<MediaFile>("mediaFiles").findOne({
+      _id: new ObjectId(id),
+    })
+    if (!existing) {
+      return NextResponse.json({ error: "Media file not found" }, { status: 404 })
+    }
+
     const result = await db.collection<MediaFile>("mediaFiles").findOneAndUpdate(
-      { _id: new ObjectId(id), clientId },
+      { _id: new ObjectId(id) },
       { $set: update },
       { returnDocument: "after" },
     )
@@ -87,7 +94,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess("mediaUploader")
+    await requireAdminAccess("mediaUploader")
     const { id } = await params
 
     if (!ObjectId.isValid(id)) {
@@ -97,7 +104,6 @@ export async function DELETE(
     const db = await getDb()
     const result = await db.collection("mediaFiles").deleteOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
     if (result.deletedCount === 0) {

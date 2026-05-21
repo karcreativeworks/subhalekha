@@ -10,10 +10,11 @@ import { Button } from "@workspace/ui/components/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@workspace/ui/lib/utils"
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import { adminFetch, createAdminFetcher } from "@/lib/admin/admin-api"
 
 interface TagMultiSelectProps {
+  /** Session client id for admin API permission checks. */
+  clientId?: string
   selectedTags: string[]
   onTagsChange: (tags: string[]) => void
   label?: string
@@ -21,6 +22,7 @@ interface TagMultiSelectProps {
 }
 
 export function TagMultiSelect({
+  clientId,
   selectedTags,
   onTagsChange,
   label = "Tags",
@@ -28,7 +30,12 @@ export function TagMultiSelect({
 }: TagMultiSelectProps) {
   const [search, setSearch] = useState("")
   const [isCreating, setIsCreating] = useState(false)
-  const { data: tags = [], isLoading, mutate } = useSWR<Tag[]>("/api/tags", fetcher)
+  const { data: tags = [], isLoading, mutate } = useSWR<Tag[]>(
+    "/api/tags",
+    clientId
+      ? createAdminFetcher(clientId)
+      : (url: string) => fetch(url).then((res) => res.json()),
+  )
 
   const filteredTags = useMemo(() => {
     if (!search.trim()) return tags
@@ -63,11 +70,17 @@ export function TagMultiSelect({
 
     setIsCreating(true)
     try {
-      const response = await fetch("/api/tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, displayName: name }),
-      })
+      const response = clientId
+        ? await adminFetch("/api/tags", clientId, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, displayName: name }),
+          })
+        : await fetch("/api/tags", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, displayName: name }),
+          })
       if (response.ok) {
         const newTag = (await response.json()) as Tag
         await mutate()

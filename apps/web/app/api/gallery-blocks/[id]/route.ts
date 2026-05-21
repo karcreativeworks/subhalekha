@@ -55,9 +55,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess(
-      ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
-    )
+    await requireAdminAccess(ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER)
     const { id } = await params
     const body = (await request.json()) as UpdateGalleryBlockRequest
 
@@ -71,7 +69,6 @@ export async function PUT(
     const db = await getDb()
     const existing = await db.collection<GalleryBlock>("galleryBlocks").findOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
     if (!existing) {
@@ -94,7 +91,7 @@ export async function PUT(
       if ("error" in slugResult) {
         return NextResponse.json({ error: slugResult.error }, { status: 400 })
       }
-      if (await isGalleryBlockSlugTaken(clientId, slugResult.slug, id)) {
+      if (await isGalleryBlockSlugTaken(slugResult.slug, id)) {
         return NextResponse.json(
           { error: "A gallery block with this slug already exists" },
           { status: 409 },
@@ -156,10 +153,7 @@ export async function PUT(
           { status: 400 },
         )
       }
-      const parentExists = await verifyParentEvent(
-        body.parentEventId.trim(),
-        clientId,
-      )
+      const parentExists = await verifyParentEvent(body.parentEventId.trim())
       if (!parentExists) {
         return NextResponse.json(
           { error: "Parent event not found" },
@@ -172,7 +166,7 @@ export async function PUT(
     const result = await db
       .collection<GalleryBlock>("galleryBlocks")
       .findOneAndUpdate(
-        { _id: new ObjectId(id), clientId },
+        { _id: new ObjectId(id) },
         { $set: update },
         { returnDocument: "after" },
       )
@@ -191,7 +185,6 @@ export async function PUT(
       await moveBlockBetweenEvents(
         existing.parentEventId,
         body.parentEventId.trim(),
-        clientId,
         id,
       )
     }
@@ -207,9 +200,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { clientId } = await requireAdminAccess(
-      ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER,
-    )
+    await requireAdminAccess(ADMIN_ACCESS.GALLERY_BLOCKS_MANAGER)
     const { id } = await params
 
     if (!ObjectId.isValid(id)) {
@@ -222,7 +213,6 @@ export async function DELETE(
     const db = await getDb()
     const existing = await db.collection<GalleryBlock>("galleryBlocks").findOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
     if (!existing) {
@@ -232,12 +222,11 @@ export async function DELETE(
       )
     }
 
-    const result = await db.collection("galleryBlocks").deleteOne({
+    await db.collection("galleryBlocks").deleteOne({
       _id: new ObjectId(id),
-      clientId,
     })
 
-    await removeBlockFromEvent(existing.parentEventId, clientId, id)
+    await removeBlockFromEvent(existing.parentEventId, id, "gallery")
 
     return NextResponse.json({ success: true })
   } catch (error) {

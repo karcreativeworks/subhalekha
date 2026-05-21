@@ -64,6 +64,8 @@ export const config = {
     "/api/events/:id/blocks",
     "/api/gallery-blocks",
     "/api/gallery-blocks/:path*",
+    "/api/video-blocks",
+    "/api/video-blocks/:path*",
     "/api/public/:path*",
   ],
 }
