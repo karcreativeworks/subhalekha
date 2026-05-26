@@ -3,8 +3,14 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { EventContentGrid } from "@/components/site/event-content-grid"
+import { GalleryBlocksShowcase } from "@/components/site/gallery-blocks-showcase"
 import { PageHeader } from "@/components/site/page-header"
-import { getPublicEventBySlug, getPublicEventContentGrid } from "@/lib/gallery/public-event"
+import type { EventContentGridItem } from "@/app/types/gallery"
+import {
+  getPublicEventBySlug,
+  getPublicGalleryBlocksForEvent,
+  getPublicVideoBlocksForEvent,
+} from "@/lib/gallery/public-event"
 import { buildEventLandingMetadata } from "@/lib/site/share-metadata"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -43,11 +49,23 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
     notFound()
   }
 
-  const gridItems = await getPublicEventContentGrid(event)
+  const [galleryBlocks, videoBlocks] = await Promise.all([
+    getPublicGalleryBlocksForEvent(event),
+    getPublicVideoBlocksForEvent(event),
+  ])
+
+  const videoGridItems: EventContentGridItem[] = videoBlocks.map((block) => ({
+    kind: "video",
+    id: block.id,
+    title: block.title,
+    href: `/${event.eventSlug}/video/${block.videoBlockSlug}`,
+    imageUrl: block.thumbnailUrl,
+  }))
 
   return (
     <>
       <PageHeader
+        className="mx-4 sm:mx-6"
         title={event.title}
         subtitle={event.subtitle}
         description={
@@ -63,7 +81,9 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
         backHref="/"
       />
 
-      <EventContentGrid items={gridItems} />
+      <GalleryBlocksShowcase eventSlug={event.eventSlug} blocks={galleryBlocks} />
+
+      <EventContentGrid title="Promos & Videos" items={videoGridItems} />
 
       {/* <div className="grid gap-4 sm:grid-cols-2">
         <section className={cn(glassPanel("rounded-2xl p-6"))}>

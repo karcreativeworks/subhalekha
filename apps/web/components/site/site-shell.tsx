@@ -17,13 +17,25 @@ function isGalleryIndexPath(pathname: string): boolean {
   return /^\/[^/]+\/gallery\/?$/.test(pathname)
 }
 
+/** Event landing (`/{eventSlug}`): same full-bleed layout as gallery index. */
+function isEventHomePath(pathname: string): boolean {
+  const match = pathname.match(/^\/([^/]+)\/?$/)
+  if (!match) return false
+  const segment = match[1]
+  if (segment === "coming-soon") return false
+  return true
+}
+
 function isHomePath(pathname: string): boolean {
   return pathname === "/"
 }
 
 export function SiteShell({ events, children }: SiteShellProps) {
   const pathname = usePathname()
-  const fullBleed = isGalleryIndexPath(pathname) || isHomePath(pathname)
+  const fullBleed =
+    isGalleryIndexPath(pathname) ||
+    isEventHomePath(pathname) ||
+    isHomePath(pathname)
   const isHome = isHomePath(pathname)
 
   return (

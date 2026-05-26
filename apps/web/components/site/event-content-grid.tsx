@@ -11,6 +11,7 @@ import "./gallery-blocks-showcase.css"
 
 interface EventContentGridProps {
   items: EventContentGridItem[]
+  title?: string
 }
 
 /** Delay between each card's shine in the sequence (seconds). */
@@ -45,8 +46,9 @@ function CardShineOverlay({
   )
 }
 
-export function EventContentGrid({ items }: EventContentGridProps) {
+export function EventContentGrid({ items, title }: EventContentGridProps) {
   if (!items.length) {
+    if (title) return null
     return (
       <p className="text-muted-foreground px-6 py-16 text-center text-sm">
         No galleries or videos yet.
@@ -58,6 +60,11 @@ export function EventContentGrid({ items }: EventContentGridProps) {
 
   return (
     <section className="px-4 pb-8 md:px-6">
+      {title ? (
+        <h2 className="text-muted-foreground mx-auto mb-4 max-w-6xl text-sm font-medium tracking-wide uppercase">
+          {title}
+        </h2>
+      ) : null}
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:gap-4">
         {items.map((item, index) => (
           <ContentGridCard
