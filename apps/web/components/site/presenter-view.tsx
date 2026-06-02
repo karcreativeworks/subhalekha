@@ -1113,7 +1113,12 @@ export function PresenterView({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(event) => event.stopPropagation()}
-                      aria-label="Open photo in new tab"
+                      onPointerDown={(event) => event.stopPropagation()}
+                      className={cn(
+                        toolbarButtonClass,
+                        "inline-flex cursor-pointer items-center justify-center",
+                      )}
+                      aria-label="Download photo"
                     >
                       <Download className="size-5" />
                     </a>

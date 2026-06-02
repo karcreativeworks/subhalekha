@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { ChevronDown } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { ComingSoonTrigger } from "@/components/site/coming-soon-trigger"
+import { SiteGangSelect } from "@/components/site/site-gang-provider"
 import { glassNavBar, glassPanel } from "@/components/site/glass"
 import { ThemeToggle } from "@/components/site/theme-toggle"
 import { SiteCountdown } from "@/components/site/site-countdown"
@@ -22,24 +22,32 @@ const GUIDE_LINKS = [
 
 interface SiteNavProps {
   events: SiteNavEvent[]
+  /** Fixed dark chrome (e.g. sangeet plan page) regardless of theme preference. */
+  forceDarkNav?: boolean
 }
 
 function NavPill({
   children,
   active,
   className,
+  darkNav,
 }: {
   children: React.ReactNode
   active?: boolean
   className?: string
+  darkNav?: boolean
 }) {
   return (
     <span
       className={cn(
         "flex cursor-pointer items-center gap-1 rounded-full px-3 py-2 text-xs font-medium tracking-wide uppercase transition-colors select-none",
-        active
-          ? "bg-white/20 text-foreground"
-          : "text-foreground/85 hover:bg-white/10 hover:text-foreground",
+        darkNav
+          ? active
+            ? "bg-white/20 text-white"
+            : "text-white/85 hover:bg-white/10 hover:text-white"
+          : active
+            ? "bg-white/20 text-foreground"
+            : "text-foreground/85 hover:bg-white/10 hover:text-foreground",
         className,
       )}
     >
@@ -52,10 +60,12 @@ function NavDropdown({
   label,
   children,
   align = "left",
+  darkNav,
 }: {
   label: string
   children: React.ReactNode
   align?: "left" | "center"
+  darkNav?: boolean
 }) {
   return (
     <div
@@ -64,14 +74,16 @@ function NavDropdown({
         align === "center" && "items-center",
       )}
     >
-      <NavPill>
+      <NavPill darkNav={darkNav}>
         {label}
         <ChevronDown className="size-3.5 opacity-50 transition-transform duration-200 group-hover:rotate-180" />
       </NavPill>
       <div
         className={cn(
           glassPanel(
-            "pointer-events-none absolute top-full z-50 min-w-[200px] bg-neutral-100 rounded-xl border-neutral-200/25 p-1 opacity-0 shadow-xl",
+            darkNav
+              ? "pointer-events-none absolute top-full z-50 min-w-[200px] rounded-xl border-white/10 bg-slate-950/95 p-1 opacity-0 shadow-xl"
+              : "pointer-events-none absolute top-full z-50 min-w-[200px] rounded-xl border-neutral-200/25 bg-neutral-100 p-1 opacity-0 shadow-xl",
           ),
           "transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100",
           align === "center" ? "left-1/2 -translate-x-1/2" : "left-0",
@@ -87,16 +99,23 @@ function DropdownLink({
   href,
   children,
   onNavigate,
+  darkNav,
 }: {
   href: string
   children: React.ReactNode
   onNavigate?: () => void
+  darkNav?: boolean
 }) {
   return (
     <Link
       href={href}
       onClick={onNavigate}
-      className="block rounded-lg px-3 py-2 text-sm text-foreground/90 transition-colors bg-white backdrop-blur-sm hover:opacity-80"
+      className={cn(
+        "block rounded-lg px-3 py-2 text-sm transition-colors backdrop-blur-sm",
+        darkNav
+          ? "bg-slate-900/80 text-sky-50/90 hover:bg-slate-800/90"
+          : "bg-white text-foreground/90 hover:opacity-80",
+      )}
     >
       {children}
     </Link>
@@ -106,9 +125,11 @@ function DropdownLink({
 function MenuToggle({
   open,
   onClick,
+  darkNav,
 }: {
   open: boolean
   onClick: () => void
+  darkNav?: boolean
 }) {
   return (
     <button
@@ -119,25 +140,32 @@ function MenuToggle({
       onClick={onClick}
       className={cn(
         "relative flex size-11 shrink-0 items-center justify-center rounded-xl",
-        glassPanel("border-white/30 bg-white/20"),
+        glassPanel(
+          darkNav
+            ? "border-white/10 bg-black/30"
+            : "border-white/30 bg-white/20",
+        ),
       )}
     >
       <span className="relative block h-4 w-5">
         <span
           className={cn(
-            "absolute left-0 block h-0.5 w-5 rounded-full bg-foreground transition-all duration-300 ease-out",
+            "absolute left-0 block h-0.5 w-5 rounded-full transition-all duration-300 ease-out",
+            darkNav ? "bg-white" : "bg-foreground",
             open ? "top-2 rotate-45" : "top-0 rotate-0",
           )}
         />
         <span
           className={cn(
-            "absolute left-0 top-2 block h-0.5 w-5 rounded-full bg-foreground transition-all duration-300 ease-out",
+            "absolute left-0 top-2 block h-0.5 w-5 rounded-full transition-all duration-300 ease-out",
+            darkNav ? "bg-white" : "bg-foreground",
             open ? "scale-x-0 opacity-0" : "scale-x-100 opacity-100",
           )}
         />
         <span
           className={cn(
-            "absolute left-0 block h-0.5 w-5 rounded-full bg-foreground transition-all duration-300 ease-out",
+            "absolute left-0 block h-0.5 w-5 rounded-full transition-all duration-300 ease-out",
+            darkNav ? "bg-white" : "bg-foreground",
             open ? "top-2 -rotate-45" : "top-4 rotate-0",
           )}
         />
@@ -146,7 +174,15 @@ function MenuToggle({
   )
 }
 
-function DesktopNav({ events, pathname }: { events: SiteNavEvent[]; pathname: string }) {
+function DesktopNav({
+  events,
+  pathname,
+  darkNav,
+}: {
+  events: SiteNavEvent[]
+  pathname: string
+  darkNav?: boolean
+}) {
   const isHome = pathname === "/"
 
   return (
@@ -155,29 +191,27 @@ function DesktopNav({ events, pathname }: { events: SiteNavEvent[]; pathname: st
       aria-label="Site"
     >
       <Link href="/">
-        <NavPill active={isHome}>Home</NavPill>
+        <NavPill active={isHome} darkNav={darkNav}>
+          Home
+        </NavPill>
       </Link>
 
-      <NavDropdown label="Events">
+      <NavDropdown label="Events" darkNav={darkNav}>
         {events.length === 0 ? (
-          <p className="text-muted-foreground px-3 py-2 text-xs">No events yet</p>
-        ) : (
-          events.map((event) => (
-            <DropdownLink key={event.id} href={`/${event.eventSlug}`}>
-              {event.title}
-            </DropdownLink>
-          ))
-        )}
-      </NavDropdown>
-
-      <NavDropdown label="Gallery">
-        {events.length === 0 ? (
-          <p className="text-muted-foreground px-3 py-2 text-xs">No events yet</p>
+          <p
+            className={cn(
+              "px-3 py-2 text-xs",
+              darkNav ? "text-sky-200/60" : "text-muted-foreground",
+            )}
+          >
+            No events yet
+          </p>
         ) : (
           events.map((event) => (
             <DropdownLink
               key={event.id}
-              href={`/${event.eventSlug}/gallery`}
+              href={`/${event.eventSlug}`}
+              darkNav={darkNav}
             >
               {event.title}
             </DropdownLink>
@@ -185,21 +219,50 @@ function DesktopNav({ events, pathname }: { events: SiteNavEvent[]; pathname: st
         )}
       </NavDropdown>
 
-      <NavDropdown label="Guide">
+      <NavDropdown label="Gallery" darkNav={darkNav}>
+        {events.length === 0 ? (
+          <p
+            className={cn(
+              "px-3 py-2 text-xs",
+              darkNav ? "text-sky-200/60" : "text-muted-foreground",
+            )}
+          >
+            No events yet
+          </p>
+        ) : (
+          events.map((event) => (
+            <DropdownLink
+              key={event.id}
+              href={`/${event.eventSlug}/gallery`}
+              darkNav={darkNav}
+            >
+              {event.title}
+            </DropdownLink>
+          ))
+        )}
+      </NavDropdown>
+
+      <NavDropdown label="Guide" darkNav={darkNav}>
         {GUIDE_LINKS.map((item) => (
           <Link
             key={item.key}
             href={`/coming-soon?section=${item.key}`}
-            className="block rounded-lg px-3 py-2 text-sm text-foreground/90 transition-colors hover:bg-white/15"
+            className={cn(
+              "block rounded-lg px-3 py-2 text-sm transition-colors",
+              darkNav
+                ? "text-sky-50/90 hover:bg-white/10"
+                : "text-foreground/90 hover:bg-white/15",
+            )}
           >
             {item.label}
           </Link>
         ))}
       </NavDropdown>
 
-
       <Link href="/coming-soon">
-        <NavPill active={pathname === "/coming-soon"}>Live</NavPill>
+        <NavPill active={pathname === "/coming-soon"} darkNav={darkNav}>
+          Live
+        </NavPill>
       </Link>
 
       {/* <NavPill className="cursor-default">
@@ -212,13 +275,20 @@ function DesktopNav({ events, pathname }: { events: SiteNavEvent[]; pathname: st
 function MobileNavSection({
   title,
   children,
+  darkNav,
 }: {
   title: string
   children: React.ReactNode
+  darkNav?: boolean
 }) {
   return (
     <div className="border-t border-white/10 pt-3 first:border-t-0 first:pt-0">
-      <p className="text-muted-foreground mb-2 px-2 text-[10px] font-medium tracking-widest uppercase">
+      <p
+        className={cn(
+          "mb-2 px-2 text-[10px] font-medium tracking-widest uppercase",
+          darkNav ? "text-sky-200/60" : "text-muted-foreground",
+        )}
+      >
         {title}
       </p>
       <div className="flex flex-col gap-0.5">{children}</div>
@@ -226,99 +296,114 @@ function MobileNavSection({
   )
 }
 
+function mobileLinkClass(active: boolean, darkNav?: boolean) {
+  return cn(
+    "rounded-lg px-3 py-2 text-sm",
+    darkNav ? "text-sky-50/90" : undefined,
+    active ? "bg-white/20 font-medium" : "hover:bg-white/10",
+  )
+}
+
 function MobileNav({
   events,
   pathname,
   onNavigate,
+  darkNav,
 }: {
   events: SiteNavEvent[]
   pathname: string
   onNavigate: () => void
+  darkNav?: boolean
 }) {
   return (
     <nav className="flex flex-col gap-4" aria-label="Site">
-      <MobileNavSection title="Main">
+      <MobileNavSection title="Main" darkNav={darkNav}>
         <Link
           href="/"
           onClick={onNavigate}
-          className={cn(
-            "rounded-lg px-3 py-2 text-sm",
-            pathname === "/" ? "bg-white/20 font-medium" : "hover:bg-white/10",
-          )}
+          className={mobileLinkClass(pathname === "/", darkNav)}
         >
           Home
         </Link>
         <Link
           href="/coming-soon"
           onClick={onNavigate}
-          className={cn(
-            "rounded-lg px-3 py-2 text-sm",
-            pathname === "/coming-soon"
-              ? "bg-white/20 font-medium"
-              : "hover:bg-white/10",
-          )}
+          className={mobileLinkClass(pathname === "/coming-soon", darkNav)}
         >
           Live
         </Link>
-        <div className="flex items-center justify-between rounded-lg px-3 py-2">
+        <div
+          className={cn(
+            "flex items-center justify-between rounded-lg px-3 py-2",
+            darkNav && "text-sky-50/90",
+          )}
+        >
           <span className="text-sm">Counter</span>
           <SiteCountdown />
         </div>
       </MobileNavSection>
 
-      <MobileNavSection title="Events">
+      <MobileNavSection title="Events" darkNav={darkNav}>
         {events.map((event) => (
           <Link
             key={event.id}
             href={`/${event.eventSlug}`}
             onClick={onNavigate}
-            className="rounded-lg px-3 py-2 text-sm hover:bg-white/10"
+            className={mobileLinkClass(false, darkNav)}
           >
             {event.title}
           </Link>
         ))}
       </MobileNavSection>
 
-      <MobileNavSection title="Gallery">
+      <MobileNavSection title="Gallery" darkNav={darkNav}>
         {events.map((event) => (
           <Link
             key={event.id}
             href={`/${event.eventSlug}/gallery`}
             onClick={onNavigate}
-            className="rounded-lg px-3 py-2 text-sm hover:bg-white/10"
+            className={mobileLinkClass(false, darkNav)}
           >
             {event.title}
           </Link>
         ))}
       </MobileNavSection>
 
-      <MobileNavSection title="Guide">
+      <MobileNavSection title="Guide" darkNav={darkNav}>
         {GUIDE_LINKS.map((item) => (
           <Link
             key={item.key}
             href={`/coming-soon?section=${item.key}`}
             onClick={onNavigate}
-            className="rounded-lg px-3 py-2 text-sm hover:bg-white/10"
+            className={mobileLinkClass(false, darkNav)}
           >
             {item.label}
           </Link>
         ))}
       </MobileNavSection>
 
-      <div className="flex w-full items-stretch gap-2 border-t border-white/10 pt-4">
-        <ThemeToggle className="shrink-0 self-center" />
-        <ComingSoonTrigger
-          className="min-w-0 flex-1 rounded-lg border border-white/20 bg-white/10 px-4 py-2.5 text-center text-sm font-medium"
-          label="Login — coming soon"
+      <div className="flex w-full items-center justify-between gap-2 border-t border-white/10 pt-4">
+        <span
+          className={cn(
+            "px-2 text-xs tracking-wide uppercase",
+            darkNav ? "text-sky-200/70" : "text-muted-foreground",
+          )}
         >
-          Login
-        </ComingSoonTrigger>
+          Your side
+        </span>
+        <SiteGangSelect className="min-w-0 flex-1" />
+        <ThemeToggle
+          className={cn(
+            "shrink-0",
+            darkNav && glassPanel("border-white/10 bg-black/30"),
+          )}
+        />
       </div>
     </nav>
   )
 }
 
-export function SiteNav({ events }: SiteNavProps) {
+export function SiteNav({ events, forceDarkNav = false }: SiteNavProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -333,9 +418,17 @@ export function SiteNav({ events }: SiteNavProps) {
     }
   }, [mobileOpen])
 
+  const darkNav = forceDarkNav
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-16">
-      <div className={cn(glassNavBar(), "h-full")}>
+      <div
+        className={cn(
+          glassNavBar(),
+          darkNav && "border-white/10 bg-black/40",
+          "h-full",
+        )}
+      >
         <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" className="relative z-10 flex shrink-0 items-center">
             <Image
@@ -343,7 +436,10 @@ export function SiteNav({ events }: SiteNavProps) {
               alt="Subhalekha"
               width={120}
               height={36}
-              className="h-8 w-auto object-contain sm:h-9 dark:hidden"
+              className={cn(
+                "h-8 w-auto object-contain sm:h-9",
+                darkNav ? "hidden" : "dark:hidden",
+              )}
               priority
             />
             <Image
@@ -351,34 +447,45 @@ export function SiteNav({ events }: SiteNavProps) {
               alt="Subhalekha"
               width={120}
               height={36}
-              className="hidden h-8 w-auto object-contain sm:h-9 dark:block"
+              className={cn(
+                "h-8 w-auto object-contain sm:h-9",
+                darkNav ? "block" : "hidden dark:block",
+              )}
               priority
             />
           </Link>
 
-          <DesktopNav events={events} pathname={pathname} />
+          <DesktopNav
+            events={events}
+            pathname={pathname}
+            darkNav={darkNav}
+          />
 
-          <div className="hidden shrink-0 items-center gap-2 lg:flex">
+          <div
+            className={cn(
+              "hidden shrink-0 items-center gap-2 lg:flex",
+              darkNav && "text-sky-50/90",
+            )}
+          >
             <SiteCountdown className="hidden xl:inline" />
-            <ComingSoonTrigger
-              className={cn(
-                glassPanel(
-                  "rounded-full border-white/30 px-4 py-2 text-xs font-medium tracking-wide uppercase",
-                ),
-                "hover:bg-white/20",
-              )}
-              label="Login — coming soon"
-            >
-              Login
-            </ComingSoonTrigger>
-            <ThemeToggle />
+            <SiteGangSelect />
+            <ThemeToggle
+              className={darkNav ? glassPanel("border-white/10 bg-black/30") : undefined}
+            />
           </div>
 
-          <div className="flex items-center gap-2 lg:hidden">
+          <div
+            className={cn(
+              "flex items-center gap-2 lg:hidden",
+              darkNav && "text-sky-50/90",
+            )}
+          >
             <SiteCountdown className="hidden min-[400px]:inline sm:inline" />
+            <SiteGangSelect />
             <MenuToggle
               open={mobileOpen}
               onClick={() => setMobileOpen((v) => !v)}
+              darkNav={darkNav}
             />
           </div>
         </div>
@@ -387,7 +494,8 @@ export function SiteNav({ events }: SiteNavProps) {
       <div
         className={cn(
           "fixed inset-0 top-16 z-40 transition-opacity duration-300 lg:hidden",
-          "bg-background/50 backdrop-blur-sm",
+          darkNav ? "bg-black/60" : "bg-background/50",
+          "backdrop-blur-sm",
           mobileOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0",
@@ -401,7 +509,9 @@ export function SiteNav({ events }: SiteNavProps) {
           aria-modal="true"
           className={cn(
             glassPanel(
-              "mx-4 mt-3 max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border-white/30 p-4 shadow-2xl",
+              darkNav
+                ? "mx-4 mt-3 max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border-white/10 bg-slate-950/95 p-4 text-sky-50/90 shadow-2xl"
+                : "mx-4 mt-3 max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border-white/30 p-4 shadow-2xl",
             ),
             "transition-all duration-300 ease-out",
             mobileOpen
@@ -414,6 +524,7 @@ export function SiteNav({ events }: SiteNavProps) {
             events={events}
             pathname={pathname}
             onNavigate={() => setMobileOpen(false)}
+            darkNav={darkNav}
           />
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
   Video,
   LogOut,
   UserCog,
+  Mic2,
 } from "lucide-react"
 import { Toaster } from "sonner"
 
@@ -57,6 +58,13 @@ const navItems = [
     icon: UserCog,
     access: ADMIN_ACCESS.ADMIN_USERS,
     breadcrumb: "Admin Users",
+  },
+  {
+    href: "/admin/sangeet-performances",
+    label: "Sangeet Plan",
+    icon: Mic2,
+    access: ADMIN_ACCESS.SANGEET_PLAN_MANAGER,
+    breadcrumb: "Sangeet Plan",
   },
 ] as const
 

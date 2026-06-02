@@ -30,23 +30,34 @@ function isHomePath(pathname: string): boolean {
   return pathname === "/"
 }
 
+function isSangeetPlanPath(pathname: string): boolean {
+  return pathname.startsWith("/guide/sangeet/plan")
+}
+
 export function SiteShell({ events, children }: SiteShellProps) {
   const pathname = usePathname()
+  const isSangeetPlan = isSangeetPlanPath(pathname)
   const fullBleed =
     isGalleryIndexPath(pathname) ||
     isEventHomePath(pathname) ||
-    isHomePath(pathname)
+    isHomePath(pathname) ||
+    isSangeetPlan
   const isHome = isHomePath(pathname)
 
   return (
     <div className="relative min-h-svh">
-      {!isHome ? (
+      {isSangeetPlan ? (
+        <div
+          className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-950 via-slate-900 to-sky-950"
+          aria-hidden
+        />
+      ) : !isHome ? (
         <div
           className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-tl from-sky-100/80 via-background to-white-100/60 dark:from-rose-950/40 dark:via-background dark:to-sky-950/30"
           aria-hidden
         />
       ) : null}
-      <SiteNav events={events} />
+      <SiteNav events={events} forceDarkNav={isSangeetPlan} />
       <main
         className={cn(
           "w-full",

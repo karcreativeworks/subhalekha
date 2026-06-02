@@ -1,0 +1,1 @@
+export const SANGEET_PERFORMANCES_PAGE_SIZE = 10

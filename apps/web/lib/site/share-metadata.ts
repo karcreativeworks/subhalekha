@@ -2,6 +2,10 @@ import type { Metadata } from "next"
 
 import type { EventPublic, GalleryBlockPublic } from "@/app/types/gallery"
 import { getCloudflareImageUrl } from "@/lib/media/cloudflare-image"
+import {
+  SANGEET_PLAN_HERO_DESKTOP,
+  SANGEET_PLAN_HERO_OG_META,
+} from "@/lib/sangeet/performance-constants"
 import { getSiteMetadataBaseUrl } from "@/lib/site/site-url"
 
 const SITE_NAME = "Subhalekha"
@@ -49,6 +53,36 @@ export function buildSiteHomeMetadata(): Metadata {
   const description =
     "Celebrations & Memories — Browse galleries and event photos. Check out Itenary, Map & Schedule.."
   const ogUrl = absolutePublicOgImage(LANDING_OG_IMAGE_PATH)
+  const images = [{ url: ogUrl }]
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      siteName: SITE_NAME,
+      type: "website",
+      title,
+      description,
+      url: path,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogUrl],
+    },
+  }
+}
+
+/** Sangeet performance plan — public guide page. */
+export function buildSangeetPlanMetadata(): Metadata {
+  const path = "/guide/sangeet/plan"
+  const title = `Sangeet performance plan · ${SITE_NAME}`
+  const description =
+    "View the sangeet schedule and add your act for the evening. Performer names stay private until show day."
+  const ogUrl = absolutePublicOgImage(SANGEET_PLAN_HERO_OG_META)
   const images = [{ url: ogUrl }]
 
   return {

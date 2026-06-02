@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { Toaster } from "sonner"
 
-import { SiteShell } from "@/components/site/site-shell"
+import { SiteLayoutClient } from "@/components/site/site-layout-client"
 import { getPublicEventsList } from "@/lib/gallery/public-event"
 import { toSiteNavEvents } from "@/lib/site/public-events"
 
@@ -17,7 +17,7 @@ export default async function SiteLayout({
 
   return (
     <>
-      <SiteShell events={events}>{children}</SiteShell>
+      <SiteLayoutClient events={events}>{children}</SiteLayoutClient>
       <Toaster richColors position="top-center" />
     </>
   )
