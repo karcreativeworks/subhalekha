@@ -615,7 +615,7 @@ export function SangeetPlanPage() {
                 <Input
                   id="sangeet-performer-count"
                   type="number"
-                  min={1}
+                  min={0}
                   step={1}
                   inputMode="numeric"
                   value={form.performerCount}
