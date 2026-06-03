@@ -51,8 +51,8 @@ export function parseSangeetPerformanceBody(
   if (!title) {
     return { ok: false, error: "Title is required" }
   }
-  if (!Number.isInteger(performerCount) || performerCount < 1 || performerCount > 10) {
-    return { ok: false, error: "Performer count must be between 1 and 10" }
+  if (!Number.isInteger(performerCount) || performerCount < 1) {
+    return { ok: false, error: "Performer count must be at least 1" }
   }
   if (!performerNames) {
     return { ok: false, error: "Name / names of performers is required" }

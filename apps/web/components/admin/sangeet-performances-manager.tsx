@@ -92,7 +92,8 @@ export function SangeetPerformancesManager() {
   const [isSaving, setIsSaving] = useState(false)
 
   const setPerformerCount = (count: number) => {
-    const next = Math.min(10, Math.max(1, count))
+    if (!Number.isFinite(count)) return
+    const next = Math.max(1, Math.floor(count))
     setForm((prev) => (prev ? { ...prev, performerCount: next } : prev))
   }
 
@@ -345,7 +346,6 @@ export function SangeetPerformancesManager() {
                     id="admin-performer-count"
                     type="number"
                     min={1}
-                    max={10}
                     step={1}
                     inputMode="numeric"
                     value={form.performerCount}
