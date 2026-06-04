@@ -35,4 +35,4 @@ export const SANGEET_PLAN_HERO_DESKTOP = "/sangeet/hero-desktop.png"
 export const SANGEET_PLAN_HERO_OG_META = "/sangeet/hero-desktop-og.jpeg"
 
 /** Replace with `/public/guide/sangeet/hero-mobile.jpg` when assets are ready. */
-export const SANGEET_PLAN_HERO_MOBILE = "/sangeet/hero-mobile3.png"
+export const SANGEET_PLAN_HERO_MOBILE = "/sangeet/hero-mobile.png"
