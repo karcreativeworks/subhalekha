@@ -72,7 +72,7 @@ const fetcher = async (url: string) => {
 
 type FormState = {
   title: string
-  performerCount: number
+  performerCount: string
   performerNames: string
   performanceType: SangeetPerformanceType
   gang: SangeetGang
@@ -82,7 +82,7 @@ type FormState = {
 
 const emptyForm = (gang: SangeetGang = "bride"): FormState => ({
   title: "",
-  performerCount: 1,
+  performerCount: "1",
   performerNames: "",
   performanceType: "mixed_group_dance",
   gang,
@@ -93,7 +93,7 @@ const emptyForm = (gang: SangeetGang = "bride"): FormState => ({
 function performanceToForm(performance: SangeetPerformancePublic): FormState {
   return {
     title: performance.title,
-    performerCount: performance.performerCount,
+    performerCount: String(performance.performerCount),
     performerNames: performance.performerNames,
     performanceType: performance.performanceType,
     gang: performance.gang,
@@ -354,12 +354,6 @@ export function SangeetPlanPage() {
     }
   }, [siteGang, editingId])
 
-  const setPerformerCount = (count: number) => {
-    if (!Number.isFinite(count)) return
-    const next = Math.max(1, Math.floor(count))
-    setForm((prev) => ({ ...prev, performerCount: next }))
-  }
-
   const goToPage = (nextPage: number) => {
     setPage(nextPage)
     listSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -431,11 +425,17 @@ export function SangeetPlanPage() {
       return
     }
 
+    const performerCount = Number.parseInt(form.performerCount, 10)
+    if (!Number.isInteger(performerCount) || performerCount < 1) {
+      toast.error("Performer count must be at least 1")
+      return
+    }
+
     setIsSubmitting(true)
 
     const payload: CreateSangeetPerformanceRequest = {
       title: form.title.trim(),
-      performerCount: form.performerCount,
+      performerCount,
       performerNames: form.performerNames.trim(),
       performanceType: form.performanceType,
       gang: form.gang,
@@ -615,13 +615,24 @@ export function SangeetPlanPage() {
                 <Input
                   id="sangeet-performer-count"
                   type="number"
-                  min={0}
+                  min={1}
                   step={1}
                   inputMode="numeric"
                   value={form.performerCount}
-                  onChange={(event) =>
-                    setPerformerCount(Number(event.target.value))
-                  }
+                  onChange={(event) => {
+                    const value = event.target.value
+                    if (value !== "" && !/^\d+$/.test(value)) return
+                    setForm((prev) => ({ ...prev, performerCount: value }))
+                  }}
+                  onBlur={() => {
+                    setForm((prev) => {
+                      const parsed = Number.parseInt(prev.performerCount, 10)
+                      if (!Number.isInteger(parsed) || parsed < 1) {
+                        return { ...prev, performerCount: "1" }
+                      }
+                      return { ...prev, performerCount: String(parsed) }
+                    })
+                  }}
                   className={sangeetFormControlClassName}
                   required
                 />

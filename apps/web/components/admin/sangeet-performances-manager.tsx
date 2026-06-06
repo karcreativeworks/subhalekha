@@ -54,7 +54,7 @@ import {
 
 type FormState = {
   title: string
-  performerCount: number
+  performerCount: string
   performerNames: string
   performanceType: SangeetPerformanceType
   gang: SangeetGang
@@ -68,7 +68,7 @@ const selectClassName =
 function performanceToForm(performance: SangeetPerformancePublic): FormState {
   return {
     title: performance.title,
-    performerCount: performance.performerCount,
+    performerCount: String(performance.performerCount),
     performerNames: performance.performerNames,
     performanceType: performance.performanceType,
     gang: performance.gang,
@@ -91,12 +91,6 @@ export function SangeetPerformancesManager() {
   const [form, setForm] = useState<FormState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  const setPerformerCount = (count: number) => {
-    if (!Number.isFinite(count)) return
-    const next = Math.max(1, Math.floor(count))
-    setForm((prev) => (prev ? { ...prev, performerCount: next } : prev))
-  }
-
   const openEdit = (performance: SangeetPerformancePublic) => {
     setEditingId(performance.id)
     setForm(performanceToForm(performance))
@@ -112,6 +106,12 @@ export function SangeetPerformancesManager() {
       !form.songs.trim()
     ) {
       toast.error("Please fill in all required fields")
+      return
+    }
+
+    const performerCount = Number.parseInt(form.performerCount, 10)
+    if (!Number.isInteger(performerCount) || performerCount < 1) {
+      toast.error("Performer count must be at least 1")
       return
     }
 
@@ -317,10 +317,10 @@ export function SangeetPerformancesManager() {
                       setForm((prev) =>
                         prev
                           ? {
-                              ...prev,
-                              performanceType:
-                                event.target.value as SangeetPerformanceType,
-                            }
+                            ...prev,
+                            performanceType:
+                              event.target.value as SangeetPerformanceType,
+                          }
                           : prev,
                       )
                     }
@@ -349,9 +349,23 @@ export function SangeetPerformancesManager() {
                     step={1}
                     inputMode="numeric"
                     value={form.performerCount}
-                    onChange={(event) =>
-                      setPerformerCount(Number(event.target.value))
-                    }
+                    onChange={(event) => {
+                      const value = event.target.value
+                      if (value !== "" && !/^\d+$/.test(value)) return
+                      setForm((prev) =>
+                        prev ? { ...prev, performerCount: value } : prev,
+                      )
+                    }}
+                    onBlur={() => {
+                      setForm((prev) => {
+                        if (!prev) return prev
+                        const parsed = Number.parseInt(prev.performerCount, 10)
+                        if (!Number.isInteger(parsed) || parsed < 1) {
+                          return { ...prev, performerCount: "1" }
+                        }
+                        return { ...prev, performerCount: String(parsed) }
+                      })
+                    }}
                     required
                   />
                 </div>
@@ -386,11 +400,11 @@ export function SangeetPerformancesManager() {
                       setForm((prev) =>
                         prev
                           ? {
-                              ...prev,
-                              durationMinutes: Number(
-                                event.target.value,
-                              ) as SangeetDurationMinutes,
-                            }
+                            ...prev,
+                            durationMinutes: Number(
+                              event.target.value,
+                            ) as SangeetDurationMinutes,
+                          }
                           : prev,
                       )
                     }
