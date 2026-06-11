@@ -25,7 +25,7 @@ export function UploadTrigger({
   className,
   uiType = "button",
   dropzoneClassName,
-  maxFiles = 20,
+  maxFiles = 50,
   autoUpload = false,
   preselectedTags = [],
 }: UploadTriggerProps) {

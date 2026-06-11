@@ -19,11 +19,11 @@ interface DropzoneProps {
 export function Dropzone({
   onDrop,
   onPaste,
-  maxFiles = 20,
+  maxFiles = 50,
   className,
   disabled = false,
   description = "Drop your files here or click to upload",
-  hint = "Images and videos • bulk upload supported",
+  hint = "Images and videos • bulk upload supported • Max 50",
 }: DropzoneProps) {
   const dropzoneRef = useRef<HTMLDivElement>(null)
 

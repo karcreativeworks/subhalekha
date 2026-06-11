@@ -128,11 +128,11 @@ export function UploadDialog({
             prev.map((item, itemIndex) =>
               itemIndex === index
                 ? {
-                    ...item,
-                    status: "completed",
-                    progress: 100,
-                    mediaUrl: publicUrl,
-                  }
+                  ...item,
+                  status: "completed",
+                  progress: 100,
+                  mediaUrl: publicUrl,
+                }
                 : item,
             ),
           )
@@ -222,7 +222,7 @@ export function UploadDialog({
         <div className="space-y-4">
           <Dropzone
             onDrop={(accepted) => setFiles((prev) => [...prev, ...accepted])}
-            maxFiles={20}
+            maxFiles={50}
           />
 
           <TagMultiSelect

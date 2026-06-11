@@ -13,7 +13,8 @@ import { SiteCountdown } from "@/components/site/site-countdown"
 import type { SiteNavEvent } from "@/lib/site/public-events"
 import { cn } from "@workspace/ui/lib/utils"
 
-const GUIDE_LINKS = [
+const GUIDE_LINKS: { label: string; key: string; href?: string }[] = [
+  { label: "Groom's Invite", key: "groom-invite", href: "/invite/groom" },
   { label: "Map", key: "map" },
   { label: "Itinerary", key: "itinerary" },
   { label: "Dresscode", key: "dresscode" },
@@ -246,7 +247,7 @@ function DesktopNav({
         {GUIDE_LINKS.map((item) => (
           <Link
             key={item.key}
-            href={`/coming-soon?section=${item.key}`}
+            href={item.href ? item.href : `/coming-soon?section=${item.key}`}
             className={cn(
               "block rounded-lg px-3 py-2 text-sm transition-colors",
               darkNav
@@ -481,7 +482,7 @@ export function SiteNav({ events, forceDarkNav = false }: SiteNavProps) {
             )}
           >
             <SiteCountdown className="hidden min-[400px]:inline sm:inline" />
-            <SiteGangSelect />
+            {/* <SiteGangSelect /> */}
             <MenuToggle
               open={mobileOpen}
               onClick={() => setMobileOpen((v) => !v)}

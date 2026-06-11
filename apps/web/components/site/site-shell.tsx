@@ -34,15 +34,22 @@ function isSangeetPlanPath(pathname: string): boolean {
   return pathname.startsWith("/guide/sangeet/plan")
 }
 
+function isInviteGroomPath(pathname: string): boolean {
+  return pathname.startsWith("/invite")
+}
+
 export function SiteShell({ events, children }: SiteShellProps) {
   const pathname = usePathname()
   const isSangeetPlan = isSangeetPlanPath(pathname)
+  const isInviteGroom = isInviteGroomPath(pathname)
   const fullBleed =
     isGalleryIndexPath(pathname) ||
     isEventHomePath(pathname) ||
     isHomePath(pathname) ||
-    isSangeetPlan
+    isSangeetPlan || isInviteGroom
   const isHome = isHomePath(pathname)
+  const flushMainPadding = isHome || isInviteGroom
+  const forceDarkNav = isSangeetPlan || isInviteGroom;
 
   return (
     <div className="relative min-h-svh">
@@ -57,11 +64,11 @@ export function SiteShell({ events, children }: SiteShellProps) {
           aria-hidden
         />
       ) : null}
-      <SiteNav events={events} forceDarkNav={isSangeetPlan} />
+      <SiteNav events={events} forceDarkNav={forceDarkNav} />
       <main
         className={cn(
           "w-full",
-          isHome ? "pb-0 pt-0" : "pb-16 pt-16",
+          flushMainPadding ? "pb-0 pt-0" : "pb-16 pt-16",
           fullBleed ? "px-0" : "mx-auto max-w-6xl px-4 sm:px-6",
         )}
       >

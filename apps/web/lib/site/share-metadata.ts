@@ -13,6 +13,9 @@ const SITE_NAME = "Subhalekha"
 /** Public OG image for the site homepage (`public/landing_og_image.png`). */
 export const LANDING_OG_IMAGE_PATH = "/landing_og_image_small.jpeg"
 
+/** Public OG image for the groom invite page (`public/invite/thumb-invite-groom.jpg`). */
+export const GROOM_INVITE_OG_IMAGE_PATH = "/invite/thumb-invite-groom.jpg"
+
 function absolutePublicOgImage(path: string): string {
   return new URL(path, getSiteMetadataBaseUrl()).href
 }
@@ -53,6 +56,36 @@ export function buildSiteHomeMetadata(): Metadata {
   const description =
     "Celebrations & Memories — Browse galleries and event photos. Check out Itenary, Map & Schedule.."
   const ogUrl = absolutePublicOgImage(LANDING_OG_IMAGE_PATH)
+  const images = [{ url: ogUrl }]
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      siteName: SITE_NAME,
+      type: "website",
+      title,
+      description,
+      url: path,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogUrl],
+    },
+  }
+}
+
+/** Groom invite page. */
+export function buildGroomInviteMetadata(): Metadata {
+  const path = "/invite/groom"
+  const title = `శుభకర్ weds శ్రీలేఖ . July 7 & 8, 2026`
+  const description =
+    "తిక్కిరెడ్డి వారి పెళ్లి సందడి. You're invited to celebrate with us."
+  const ogUrl = absolutePublicOgImage(GROOM_INVITE_OG_IMAGE_PATH)
   const images = [{ url: ogUrl }]
 
   return {
