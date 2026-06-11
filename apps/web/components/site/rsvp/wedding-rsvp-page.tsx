@@ -367,7 +367,7 @@ export function WeddingRsvpPage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
                 {WEDDING_RSVP_DATES.map((day) => {
                   const isSelected = form.selectedDates.includes(day.key)
                   return (
@@ -563,7 +563,7 @@ export function WeddingRsvpPage() {
               </p>
             ) : null}
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-center justify-between">
               <h4 className="text-xl">We will be extremely glad if you can join us for all the events we have planned.</h4>
               <Button
                 type="submit"
