@@ -6,6 +6,7 @@ export const WEDDING_EVENT_IDS = [
   "barat",
   "reception",
   "marriage",
+  "wedding_rituals",
   "sangeet",
 ] as const
 
@@ -16,6 +17,8 @@ export interface WeddingEventDetail {
   title: string
   timing: string
   description: string
+  monthDayLabel?: string
+  dayName?: string
 }
 
 export interface WeddingDateDetail {
@@ -88,12 +91,12 @@ export const WEDDING_RSVP_DATES: WeddingDateDetail[] = [
         timing: "Evening",
         description: "Welcome celebration for family and guests.",
       },
-      {
-        id: "marriage",
-        title: "Marriage",
-        timing: "Night",
-        description: "The main wedding ceremony.",
-      },
+      // {
+      //   id: "marriage",
+      //   title: "Marriage",
+      //   timing: "Night",
+      //   description: "The main wedding ceremony.",
+      // },
     ],
   },
   {
@@ -101,7 +104,15 @@ export const WEDDING_RSVP_DATES: WeddingDateDetail[] = [
     isoDate: "2026-07-08",
     monthDayLabel: "July 8",
     dayName: "Wednesday",
-    events: [],
+    events: [
+      {
+        id: "wedding_rituals",
+        title: "Wedding Rituals",
+        timing: "Early morning",
+        description:
+          "Main-wedding rituals and traditions that continue from early morning of July 8 - 6:45am.",
+      },
+    ],
   },
   {
     key: "jul_9",
@@ -122,8 +133,18 @@ export const WEDDING_RSVP_DATES: WeddingDateDetail[] = [
 export const WEDDING_EVENT_BY_ID: Record<WeddingEventId, WeddingEventDetail> =
   Object.fromEntries(
     WEDDING_RSVP_DATES.flatMap((day) =>
-      day.events.map((event) => [event.id, event] as const),
-    ),
+      day.events.map(
+        (event) =>
+          [
+            event.id,
+            {
+              ...event,
+              monthDayLabel: day.monthDayLabel,
+              dayName: day.dayName,
+            },
+          ] as const
+      )
+    )
   ) as Record<WeddingEventId, WeddingEventDetail>
 
 export function isWeddingEventId(value: string): value is WeddingEventId {
@@ -135,7 +156,7 @@ export function isWeddingDateKey(value: string): boolean {
 }
 
 export function eventIdsForSelectedDates(
-  selectedDates: string[],
+  selectedDates: string[]
 ): WeddingEventId[] {
   const ids: WeddingEventId[] = []
   for (const day of WEDDING_RSVP_DATES) {

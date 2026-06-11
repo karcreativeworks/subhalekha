@@ -43,7 +43,7 @@ const API_URL = "/api/public/rsvp"
 
 const rsvpPanelClassName = cn(
   "relative overflow-hidden rounded-2xl border border-amber-200/80 p-6 shadow-lg shadow-amber-900/5 sm:p-8",
-  "bg-gradient-to-br from-white via-amber-50/60 to-amber-100/40",
+  "bg-gradient-to-br from-white via-amber-50/100 to-amber-100/100",
   "ring-1 ring-amber-300/30",
 )
 
@@ -146,7 +146,7 @@ function SelectionSummary({ selectedDates }: { selectedDates: string[] }) {
 
 function RsvpSuccessScreen() {
   return (
-    <section className="relative flex min-h-[calc(100svh-60px)] w-full items-center justify-center overflow-hidden">
+    <section className="relative flex min-h-[calc(100svh)] w-full items-center justify-center overflow-hidden">
       <Image
         src={RSVP_SUCCESS_BACKGROUND}
         alt=""
@@ -305,30 +305,45 @@ export function WeddingRsvpPage() {
           className="absolute inset-0 bg-gradient-to-t from-amber-100/95 via-amber-50/75 to-white/90"
           aria-hidden
         />
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-end justify-end px-4 pb-10 pt-24 sm:px-6">
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-amber-700/80 md:text-sm">
-            Wedding RSVP
-          </p>
-          <h1 className="mt-2 bg-gradient-to-r from-amber-900 via-amber-700 to-amber-800 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl md:text-5xl">
-            Count Me In
-          </h1>
-          <p className="mt-2 max-w-xl text-right text-sm text-amber-900/70 sm:text-base">
-            Tell us who is coming, which side you are on, and which days you
-            will join us — July 5 through 9.
-          </p>
-        </div>
+        
       </section> */}
 
+
+
+      <div className="fixed top-0 bottom-0 left-0 right-0 z-0">
+        <Image
+          src={RSVP_SUCCESS_BACKGROUND}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover top-0 bottom-0 left-0 right-0 w-full max-h-[100vh]"
+        />
+      </div>
+
+      <div className="relative flex flex-col items-center gap-0 justify-center mx-auto max-w-6xl space-y-10 px-2 pt-[20vh] pb-0 sm:px-6">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-amber-700 md:text-sm">
+          Wedding RSVP
+        </p>
+        <h1 className="mt-0 bg-gradient-to-r from-amber-900 via-amber-700 to-amber-800 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl md:text-6xl">
+          {siteGang === 'groom' ? "Subhakar weds Srilekha" : "Srilekha weds Subhakar"}
+        </h1>
+        <p className="text-center max-w-xl text-sm text-amber-900/70 sm:text-base">
+          Our story continues… and we hope you’ll be there.<br />Tell us who is coming, and which days you
+          will join us — July 5 through 9.
+        </p>
+      </div>
       <div className="mx-auto max-w-6xl space-y-10 px-2 pb-16 pt-24 sm:px-6">
+
         <section id="wedding-rsvp-form" className={rsvpPanelClassName}>
           <div className={rsvpPanelGlowClassName} aria-hidden />
           <div className="relative mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-4xl font-semibold tracking-tight text-amber-900">
-                Join Us for Our Wedding
+                Join &amp; Celebrate with Us
               </h2>
               <p className="mt-1 text-sm text-amber-800/60">
-                July 7 is the main wedding day — select any extra days you can make time for us.
+                July 7 is the main wedding day — select any extra days, that you can make time for us.
               </p>
             </div>
             <SelectionSummary selectedDates={form.selectedDates} />
@@ -418,40 +433,10 @@ export function WeddingRsvpPage() {
               </div>
             </div>
 
-            {selectedEventIds.length > 0 ? (
-              <div className="space-y-3">
-                <p className="flex items-center gap-2 text-sm font-medium text-amber-950">
-                  <Heart className="size-4 text-amber-600" />
-                  Your event list
-                </p>
-                <ul className="space-y-3 grid grid-cols-9 gap-2">
-                  {selectedEventIds.map((eventId) => {
-                    const event = WEDDING_EVENT_BY_ID[eventId]
-                    return (
-                      <li
-                        key={eventId}
-                        className="col-span-9 md:col-span-3 rounded-lg border border-amber-100 bg-white/90 px-3 py-2.5 shadow-sm"
-                      >
-                        <p className="font-medium text-amber-950">
-                          {event.title}
-                        </p>
-                        <p className="mt-0.5 text-xs text-amber-600">
-                          {event.timing}
-                        </p>
-                        <p className="mt-1 text-xs text-amber-800/60">
-                          {event.description}
-                        </p>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            ) : null}
-
-            <div className="grid gap-4 sm:grid-cols-4">
+            <div className="grid">
               <FormRow
                 icon={<User className="size-4" />}
-                label="Your name"
+                label="Your names (separated by comma)"
                 htmlFor="rsvp-guest-name"
               >
                 <Input
@@ -468,6 +453,8 @@ export function WeddingRsvpPage() {
                   required
                 />
               </FormRow>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
 
               <FormRow icon={<UsersRound className="size-4" />} label="Team">
                 <select
@@ -534,10 +521,42 @@ export function WeddingRsvpPage() {
               </FormRow>
             </div>
 
+            {selectedEventIds.length > 0 ? (
+              <div className="space-y-3">
+                <p className="flex items-center gap-2 text-sm font-medium text-amber-950">
+                  <Heart className="size-4 text-amber-600" />
+                  Your event list ( that which you can make it to based on dates selected )
+                </p>
+                <ul className="space-y-3 grid grid-cols-9 gap-2">
+                  {selectedEventIds.map((eventId) => {
+                    const event = WEDDING_EVENT_BY_ID[eventId]
+                    return (
+                      <li
+                        key={eventId}
+                        className="col-span-9 md:col-span-3 rounded-lg py-2.5"
+                      >
+                        <div className="flex flex-col items-start gap-0 mb-2">
+                          <p className="font-medium text-amber-950 text-lg">
+                            {event.title} - {event.monthDayLabel}
+                          </p>
+                          <p className="mt-0.5 text-xs text-amber-600 uppercase tracking-wider">
+                            {event.dayName} - {event.timing}
+                          </p>
+                        </div>
+                        <p className="mt-1 text-md text-neutral-800/60">
+                          {event.description}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ) : null}
+
 
             {computedTotalAttendees !== null && computedTotalAttendees > 0 ? (
-              <p className="text-sm text-amber-800/70">
-                <span className="font-medium text-amber-900">
+              <p className="text-md text-amber-800/70">
+                <span className="font-medium text-amber-900 text-2xl">
                   {computedTotalAttendees}
                 </span>{" "}
                 {computedTotalAttendees === 1 ? "guest" : "guests"} total
@@ -545,7 +564,7 @@ export function WeddingRsvpPage() {
             ) : null}
 
             <div className="flex items-center justify-between">
-              <h4 className="text-xl">We will be extremely glad if you can join us for all the events.</h4>
+              <h4 className="text-xl">We will be extremely glad if you can join us for all the events we have planned.</h4>
               <Button
                 type="submit"
                 size="lg"

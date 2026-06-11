@@ -6,7 +6,7 @@ import {
   SANGEET_PLAN_HERO_DESKTOP,
   SANGEET_PLAN_HERO_OG_META,
 } from "@/lib/sangeet/performance-constants"
-import { RSVP_HERO_DESKTOP } from "@/lib/rsvp/rsvp-constants"
+import { RSVP_HERO_DESKTOP, RSVP_OG_METADATA } from "@/lib/rsvp/rsvp-constants"
 import { getSiteMetadataBaseUrl } from "@/lib/site/site-url"
 
 const SITE_NAME = "Subhalekha"
@@ -113,10 +113,10 @@ export function buildGroomInviteMetadata(): Metadata {
 /** Wedding RSVP — public guest form. */
 export function buildWeddingRsvpMetadata(): Metadata {
   const path = "/rsvp"
-  const title = `Wedding RSVP · ${SITE_NAME}`
+  const title = `Subhakar weds Srilekha . Wedding RSVP · July 7 & 8, 2026`
   const description =
-    "Let us know who is coming, which side you are on, and which celebration days you will join — July 5 through 9."
-  const ogUrl = absolutePublicOgImage(RSVP_HERO_DESKTOP)
+    "Our story continues… and we hope you\'ll be there. Tell us who is coming, and which days you will join us — July 5 through 9, so we can make the arrangements."
+  const ogUrl = absolutePublicOgImage(RSVP_OG_METADATA)
   const images = [{ url: ogUrl }]
 
   return {
