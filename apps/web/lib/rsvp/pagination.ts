@@ -1,0 +1,1 @@
+export const WEDDING_RSVPS_PAGE_SIZE = 20

@@ -533,6 +533,135 @@ export function SangeetPlanPage() {
       </section>
 
       <div className="mx-auto max-w-6xl space-y-10 px-2 pt-10 sm:px-6 pb-16">
+
+        <section
+          ref={listSectionRef}
+          id="sangeet-performance-list"
+          className={`${sangeetPanelClassName} pb-16`}
+        >
+          <div
+            className="pointer-events-none absolute -bottom-24 left-0 size-48 rounded-full bg-sky-600/10 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative mb-6">
+            <h2 className="text-4xl font-semibold tracking-tight text-sky-400">
+              Scheduled performances
+            </h2>
+            <p className="mt-1 text-sm text-sky-200/65">
+              Performer names are blurred for privacy. Newest entries appear first.
+            </p>
+          </div>
+
+          {isLoading ? (
+            <div className="relative flex justify-center py-12">
+              <Loader2 className="size-6 animate-spin text-sky-400" />
+            </div>
+          ) : total === 0 ? (
+            <p className="relative py-12 text-center text-sm text-sky-200/60">
+              No performances yet. Be the first to add yours.
+            </p>
+          ) : (
+            <>
+              <ul className="relative flex flex-col gap-3 md:hidden" aria-label="Scheduled performances">
+                {performances.map((row, index) => (
+                  <li key={row.id}>
+                    <SangeetPerformanceCard
+                      row={row}
+                      rowNumber={rowNumber(index)}
+                      isMine={isMySangeetPerformance(row.id, myPerformances)}
+                      onEdit={startEdit}
+                      onDelete={handleDelete}
+                    />
+                  </li>
+                ))}
+              </ul>
+
+              <div className="relative hidden overflow-x-auto rounded-xl border border-sky-800/45 md:block">
+                <table className="w-full min-w-[640px] table-fixed text-sm text-sky-50">
+                  <colgroup>
+                    <col className="w-10" />
+                    <col className="w-[18%]" />
+                    <col />
+                    <col className="w-28" />
+                    <col className="w-16" />
+                    <col className="w-[4.5rem]" />
+                  </colgroup>
+                  <thead className="bg-sky-950/80 text-left">
+                    <tr>
+                      <th className="px-4 py-3 font-medium text-sky-300/90">#</th>
+                      <th className="px-4 py-3 font-medium text-sky-300/90">Title</th>
+                      <th className="px-4 py-3 font-medium text-sky-300/90">
+                        Songs & performers
+                      </th>
+                      <th className="whitespace-nowrap px-4 py-3 font-medium text-sky-300/90">
+                        Gang
+                      </th>
+                      <th className="whitespace-nowrap px-4 py-3 font-medium text-sky-300/90">
+                        Duration
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium text-sky-300/90">
+                        Yours
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {performances.map((row, index) => (
+                      <tr
+                        key={row.id}
+                        className="border-t border-sky-800/35 hover:bg-slate-950/40"
+                      >
+                        <td className="px-4 py-3 text-sky-200/55">
+                          {rowNumber(index)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="font-medium text-sky-50">
+                              {row.title}
+                            </span>
+                            <Badge
+                              variant="secondary"
+                              className={cn("w-fit text-xs", sangeetBadgeClassName)}
+                            >
+                              {SANGEET_PERFORMANCE_TYPE_LABELS[row.performanceType]}
+                            </Badge>
+                          </div>
+                        </td>
+                        <td className="min-w-0 px-4 py-3">
+                          <PerformanceSongsAndPerformers row={row} />
+                        </td>
+                        <td className="px-4 py-3 text-sky-100/90">
+                          {SANGEET_GANG_LABELS[row.gang]}
+                        </td>
+                        <td className="px-4 py-3 text-sky-100/90">
+                          {SANGEET_DURATION_LABELS[row.durationMinutes]}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {isMySangeetPerformance(row.id, myPerformances) ? (
+                            <div className="flex justify-end">
+                              <PerformanceOwnerActions
+                                row={row}
+                                onEdit={startEdit}
+                                onDelete={handleDelete}
+                              />
+                            </div>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <PerformanceListPagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                onPageChange={goToPage}
+              />
+            </>
+          )}
+        </section>
+
         <section
           id="sangeet-performance-form"
           className={sangeetPanelClassName}
@@ -737,134 +866,6 @@ export function SangeetPlanPage() {
               )}
             </Button>
           </form>
-        </section>
-
-        <section
-          ref={listSectionRef}
-          id="sangeet-performance-list"
-          className={`${sangeetPanelClassName} pb-16`}
-        >
-          <div
-            className="pointer-events-none absolute -bottom-24 left-0 size-48 rounded-full bg-sky-600/10 blur-3xl"
-            aria-hidden
-          />
-          <div className="relative mb-6">
-            <h2 className="text-4xl font-semibold tracking-tight text-sky-400">
-              Scheduled performances
-            </h2>
-            <p className="mt-1 text-sm text-sky-200/65">
-              Performer names are blurred for privacy. Newest entries appear first.
-            </p>
-          </div>
-
-          {isLoading ? (
-            <div className="relative flex justify-center py-12">
-              <Loader2 className="size-6 animate-spin text-sky-400" />
-            </div>
-          ) : total === 0 ? (
-            <p className="relative py-12 text-center text-sm text-sky-200/60">
-              No performances yet. Be the first to add yours.
-            </p>
-          ) : (
-            <>
-              <ul className="relative flex flex-col gap-3 md:hidden" aria-label="Scheduled performances">
-                {performances.map((row, index) => (
-                  <li key={row.id}>
-                    <SangeetPerformanceCard
-                      row={row}
-                      rowNumber={rowNumber(index)}
-                      isMine={isMySangeetPerformance(row.id, myPerformances)}
-                      onEdit={startEdit}
-                      onDelete={handleDelete}
-                    />
-                  </li>
-                ))}
-              </ul>
-
-              <div className="relative hidden overflow-x-auto rounded-xl border border-sky-800/45 md:block">
-                <table className="w-full min-w-[640px] table-fixed text-sm text-sky-50">
-                  <colgroup>
-                    <col className="w-10" />
-                    <col className="w-[18%]" />
-                    <col />
-                    <col className="w-28" />
-                    <col className="w-16" />
-                    <col className="w-[4.5rem]" />
-                  </colgroup>
-                  <thead className="bg-sky-950/80 text-left">
-                    <tr>
-                      <th className="px-4 py-3 font-medium text-sky-300/90">#</th>
-                      <th className="px-4 py-3 font-medium text-sky-300/90">Title</th>
-                      <th className="px-4 py-3 font-medium text-sky-300/90">
-                        Songs & performers
-                      </th>
-                      <th className="whitespace-nowrap px-4 py-3 font-medium text-sky-300/90">
-                        Gang
-                      </th>
-                      <th className="whitespace-nowrap px-4 py-3 font-medium text-sky-300/90">
-                        Duration
-                      </th>
-                      <th className="px-4 py-3 text-right font-medium text-sky-300/90">
-                        Yours
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {performances.map((row, index) => (
-                      <tr
-                        key={row.id}
-                        className="border-t border-sky-800/35 hover:bg-slate-950/40"
-                      >
-                        <td className="px-4 py-3 text-sky-200/55">
-                          {rowNumber(index)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-col gap-1.5">
-                            <span className="font-medium text-sky-50">
-                              {row.title}
-                            </span>
-                            <Badge
-                              variant="secondary"
-                              className={cn("w-fit text-xs", sangeetBadgeClassName)}
-                            >
-                              {SANGEET_PERFORMANCE_TYPE_LABELS[row.performanceType]}
-                            </Badge>
-                          </div>
-                        </td>
-                        <td className="min-w-0 px-4 py-3">
-                          <PerformanceSongsAndPerformers row={row} />
-                        </td>
-                        <td className="px-4 py-3 text-sky-100/90">
-                          {SANGEET_GANG_LABELS[row.gang]}
-                        </td>
-                        <td className="px-4 py-3 text-sky-100/90">
-                          {SANGEET_DURATION_LABELS[row.durationMinutes]}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {isMySangeetPerformance(row.id, myPerformances) ? (
-                            <div className="flex justify-end">
-                              <PerformanceOwnerActions
-                                row={row}
-                                onEdit={startEdit}
-                                onDelete={handleDelete}
-                              />
-                            </div>
-                          ) : null}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <PerformanceListPagination
-                page={page}
-                totalPages={totalPages}
-                total={total}
-                onPageChange={goToPage}
-              />
-            </>
-          )}
         </section>
       </div>
     </div>

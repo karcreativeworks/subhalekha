@@ -21,6 +21,7 @@ import {
 import type { MediaFile } from "@/app/types/media"
 import { Dialog, DialogPortal } from "@/components/ui/dialog"
 import { getMediaImageUrl } from "@/lib/media/cloudflare-image"
+import { triggerMediaDownload } from "@/lib/media/download-image"
 import { cn } from "@workspace/ui/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
@@ -1106,13 +1107,13 @@ export function PresenterView({
                       <Volume2 className="size-5" />
                     )}
                   </button>
-                  {downloadUrl ? (
-                    <a
-                      href={downloadUrl}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(event) => event.stopPropagation()}
+                  {downloadUrl && currentPhoto ? (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        triggerMediaDownload(currentPhoto, downloadUrl)
+                      }}
                       onPointerDown={(event) => event.stopPropagation()}
                       className={cn(
                         toolbarButtonClass,
@@ -1121,7 +1122,7 @@ export function PresenterView({
                       aria-label="Download photo"
                     >
                       <Download className="size-5" />
-                    </a>
+                    </button>
                   ) : null}
                 </div>
               </div>

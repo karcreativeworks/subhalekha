@@ -38,24 +38,36 @@ function isInviteGroomPath(pathname: string): boolean {
   return pathname.startsWith("/invite")
 }
 
+function isRsvpPath(pathname: string): boolean {
+  return pathname.startsWith("/rsvp")
+}
+
 export function SiteShell({ events, children }: SiteShellProps) {
   const pathname = usePathname()
   const isSangeetPlan = isSangeetPlanPath(pathname)
   const isInviteGroom = isInviteGroomPath(pathname)
+  const isRsvp = isRsvpPath(pathname)
   const fullBleed =
     isGalleryIndexPath(pathname) ||
     isEventHomePath(pathname) ||
     isHomePath(pathname) ||
-    isSangeetPlan || isInviteGroom
+    isSangeetPlan ||
+    isInviteGroom ||
+    isRsvp
   const isHome = isHomePath(pathname)
-  const flushMainPadding = isHome || isInviteGroom
-  const forceDarkNav = isSangeetPlan || isInviteGroom;
+  const flushMainPadding = isHome || isInviteGroom || isRsvp
+  const forceDarkNav = isSangeetPlan || isInviteGroom
 
   return (
     <div className="relative min-h-svh">
       {isSangeetPlan ? (
         <div
           className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-950 via-slate-900 to-sky-950"
+          aria-hidden
+        />
+      ) : isRsvp ? (
+        <div
+          className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-br from-white via-amber-50/90 to-amber-100/80"
           aria-hidden
         />
       ) : !isHome ? (

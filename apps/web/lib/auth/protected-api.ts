@@ -8,6 +8,7 @@ export const protectedApiPathPatterns: RegExp[] = [
   /^\/api\/video-blocks(?:\/|$)/,
   /^\/api\/admin-users(?:\/|$)/,
   /^\/api\/sangeet-performances(?:\/|$)/,
+  /^\/api\/wedding-rsvps(?:\/|$)/,
 ]
 
 function normalizePathname(pathname: string): string {

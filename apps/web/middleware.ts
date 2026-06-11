@@ -68,6 +68,8 @@ export const config = {
     "/api/video-blocks/:path*",
     "/api/sangeet-performances",
     "/api/sangeet-performances/:path*",
+    "/api/wedding-rsvps",
+    "/api/wedding-rsvps/:path*",
     "/api/public/:path*",
   ],
 }

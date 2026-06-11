@@ -6,6 +6,7 @@ export const ADMIN_ACCESS = {
   VIDEO_BLOCKS_MANAGER: "videoBlocksManager",
   ADMIN_USERS: "adminUsers",
   SANGEET_PLAN_MANAGER: "sangeetPlanManager",
+  WEDDING_RSVP_MANAGER: "weddingRsvpManager",
   SUPER_ADMIN: "superAdmin",
 } as const
 
@@ -20,6 +21,7 @@ export const ALL_ADMIN_ACCESS: AdminAccessKey[] = [
   ADMIN_ACCESS.VIDEO_BLOCKS_MANAGER,
   ADMIN_ACCESS.ADMIN_USERS,
   ADMIN_ACCESS.SANGEET_PLAN_MANAGER,
+  ADMIN_ACCESS.WEDDING_RSVP_MANAGER,
   ADMIN_ACCESS.SUPER_ADMIN,
 ]
 
@@ -30,6 +32,7 @@ export const ADMIN_ACCESS_LABELS: Record<AdminAccessKey, string> = {
   [ADMIN_ACCESS.VIDEO_BLOCKS_MANAGER]: "Video Blocks",
   [ADMIN_ACCESS.ADMIN_USERS]: "Admin Users",
   [ADMIN_ACCESS.SANGEET_PLAN_MANAGER]: "Sangeet Plan",
+  [ADMIN_ACCESS.WEDDING_RSVP_MANAGER]: "Wedding RSVPs",
   [ADMIN_ACCESS.SUPER_ADMIN]: "Super Admin",
 }
 
@@ -90,6 +93,9 @@ export function getDefaultAdminPath(
   }
   if (hasAccess(access, ADMIN_ACCESS.SANGEET_PLAN_MANAGER)) {
     return "/admin/sangeet-performances"
+  }
+  if (hasAccess(access, ADMIN_ACCESS.WEDDING_RSVP_MANAGER)) {
+    return "/admin/wedding-rsvps"
   }
   return null
 }

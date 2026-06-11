@@ -11,6 +11,7 @@ import {
   LogOut,
   UserCog,
   Mic2,
+  ClipboardList,
 } from "lucide-react"
 import { Toaster } from "sonner"
 
@@ -65,6 +66,13 @@ const navItems = [
     icon: Mic2,
     access: ADMIN_ACCESS.SANGEET_PLAN_MANAGER,
     breadcrumb: "Sangeet Plan",
+  },
+  {
+    href: "/admin/wedding-rsvps",
+    label: "Wedding RSVPs",
+    icon: ClipboardList,
+    access: ADMIN_ACCESS.WEDDING_RSVP_MANAGER,
+    breadcrumb: "Wedding RSVPs",
   },
 ] as const
 
