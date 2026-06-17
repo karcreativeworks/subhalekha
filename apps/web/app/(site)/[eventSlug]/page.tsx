@@ -13,6 +13,7 @@ import {
 } from "@/lib/gallery/public-event"
 import { buildEventLandingMetadata } from "@/lib/site/share-metadata"
 import { cn } from "@workspace/ui/lib/utils"
+import { getCloudflareImageUrl } from "@/lib/media/cloudflare-image"
 
 interface EventHomePageProps {
   params: Promise<{ eventSlug: string }>
@@ -60,6 +61,9 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
     title: block.title,
     href: `/${event.eventSlug}/video/${block.videoBlockSlug}`,
     imageUrl: block.thumbnailUrl,
+    videoUrl: block.videoUrl,
+    subtitle: block.subtitle,
+    description: block.description,
   }))
 
   return (
@@ -73,8 +77,8 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
           "Welcome. Explore galleries, schedules, and more — sections will light up as you build them."
         }
         bgImageUrl={
-          event.coverPicHorizontal.trim()
-            ? event.coverPicHorizontal
+          event.coverPicHorizontal?.trim()
+            ? getCloudflareImageUrl(event.coverPicHorizontal, "medium")
             : undefined
         }
         backLabel="Back to home"
@@ -83,7 +87,7 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
 
       <GalleryBlocksShowcase eventSlug={event.eventSlug} blocks={galleryBlocks} />
 
-      <EventContentGrid title="Promos & Videos" items={videoGridItems} />
+      <EventContentGrid items={videoGridItems} />
 
       {/* <div className="grid gap-4 sm:grid-cols-2">
         <section className={cn(glassPanel("rounded-2xl p-6"))}>

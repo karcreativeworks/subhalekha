@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { PageHeader } from "@/components/site/page-header"
 import { GalleryBlocksShowcase } from "@/components/site/gallery-blocks-showcase"
 import {
   getPublicEventBySlug,

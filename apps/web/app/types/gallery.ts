@@ -187,4 +187,7 @@ export type EventContentGridItem =
       title: string
       href: string
       imageUrl: string | null
+      videoUrl: string
+      subtitle?: string
+      description?: string
     }

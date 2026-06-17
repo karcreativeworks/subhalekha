@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 
 import { glassPanel } from "@/components/site/glass"
@@ -142,15 +141,12 @@ export function PageHeader({
           ) : null}
         </div>
 
-        <div className="group relative min-h-[200px] w-full shrink-0 overflow-hidden hidden sm:block sm:min-h-0 sm:w-[min(60%,640px)] sm:self-stretch">
-          <Image
+        <div className="group relative hidden w-full shrink-0 self-stretch overflow-hidden sm:block sm:w-[min(60%,640px)]">
+          <img
             src={bgImageUrl}
             alt=""
-            fill
-            priority
-            sizes="(max-width: 640px) 100vw, 640px"
             className={cn(
-              "page-header-hero-media object-cover",
+              "page-header-hero-media absolute inset-0 size-full object-cover object-center",
               "transition-transform duration-700 ease-out",
               "group-hover:scale-[1.03]",
             )}

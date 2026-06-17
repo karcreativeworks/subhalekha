@@ -1,14 +1,10 @@
 "use client"
 
-import Image from "next/image"
-import Link from "next/link"
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
 import dynamic from "next/dynamic"
 import { useCallback, useRef, useState } from "react"
 
-import { glassPanel } from "@/components/site/glass"
-import { getCloudflareImageUrl } from "@/lib/media/cloudflare-image"
 import { cn } from "@workspace/ui/lib/utils"
 import { LandingBlocksSections, LandingEvent } from "./landing-blocks-sections"
 

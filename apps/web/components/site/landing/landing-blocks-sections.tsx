@@ -1,10 +1,9 @@
-import { cn } from "@workspace/ui/lib/utils"
-import { glassPanel } from "../glass"
-import Image from "next/image"
-import Link from "next/link"
-import { getCloudflareImageUrl } from "@/lib/media/cloudflare-image"
-import { forwardRef } from "react"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { getCloudflareImageUrl } from "@/lib/media/cloudflare-image"
+import { cn } from "@workspace/ui/lib/utils"
+import Link from "next/link"
+import { forwardRef } from "react"
+import { glassPanel } from "../glass"
 
 export interface LandingEvent {
     id: string
@@ -104,14 +103,12 @@ function LandingEventCard({
         >
             <div className="relative h-full w-full bg-black/20">
                 {coverSrc ? (
-                    <Image
+                    <img
                         src={coverSrc}
                         alt={event.title}
-                        fill
-                        priority={index < 2}
-                        sizes={isVertical ? "(max-width: 640px) 50vw, 200px" : "(max-width: 640px) 100vw, 400px"}
                         className={cn(
                             "object-cover transition-all duration-500 ease-out",
+                            isVertical ? "h-full w-full" : "h-full w-full",
                             "opacity-85 group-hover:scale-[1.02] group-hover:opacity-100",
                         )}
                     />

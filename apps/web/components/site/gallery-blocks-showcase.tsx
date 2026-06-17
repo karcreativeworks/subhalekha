@@ -150,13 +150,11 @@ function GalleryBlockCard({
       )}
     >
       <div className="card-shine relative h-full w-full overflow-hidden bg-black">
-        <Image
+        <img
           src={coverSrc}
           alt={block.title}
-          fill
-          priority={index < 2}
           className={cn(
-            "object-cover transition-all duration-500 ease-out",
+            "object-cover transition-all duration-500 ease-out h-full w-full",
             isDesktop
               ? [
                 "opacity-60 grayscale",

@@ -10,6 +10,7 @@ import {
   getPublicMediaForGalleryBlock,
 } from "@/lib/gallery/public-event"
 import { buildGalleryBlockMetadata } from "@/lib/site/share-metadata"
+import { getCloudflareImageUrl } from "@/lib/media/cloudflare-image"
 
 interface GalleryBlockPageProps {
   params: Promise<{ eventSlug: string; galleryBlockSlug: string }>
@@ -62,7 +63,11 @@ export default async function GalleryBlockPage({
         description={block.description}
         backHref={`/${event.eventSlug}/gallery`}
         backLabel={`All galleries for ${event.title}`}
-        bgImageUrl={block.coverPicHorizontal}
+        bgImageUrl={
+          block.coverPicHorizontal?.trim()
+            ? getCloudflareImageUrl(block.coverPicHorizontal, "medium")
+            : undefined
+        }
       />
 
       <PublicPhotoGridInfinite

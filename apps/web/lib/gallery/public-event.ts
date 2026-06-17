@@ -147,6 +147,9 @@ export async function getPublicEventContentGrid(
       title: block.title,
       href: `/${event.eventSlug}/video/${block.videoBlockSlug}`,
       imageUrl: block.thumbnailUrl,
+      videoUrl: block.videoUrl,
+      subtitle: block.subtitle,
+      description: block.description,
     })),
   ]
 
