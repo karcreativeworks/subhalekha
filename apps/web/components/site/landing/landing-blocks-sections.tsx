@@ -83,7 +83,7 @@ function LandingEventCard({
     event: LandingEvent
     index: number
 }) {
-    const isVertical = index % 2 === 0
+    const isVertical = false; //index % 2 === 0
     const isMobile = useMediaQuery("(max-width: 640px)")
     const coverSrc = getCloudflareImageUrl(
         isMobile ? event.coverPicHorizontal :
