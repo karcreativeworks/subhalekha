@@ -31,7 +31,7 @@ const SHINE_STAGGER_S = 0.55
 const SHINE_SWEEP_S = 1.15
 
 const cardClassName = cn(
-  "group relative aspect-square overflow-hidden rounded",
+  "group relative overflow-hidden min-h-[50vh]",
   "bg-black/80 ring-1 ring-white/10 transition-transform hover:scale-[1.02] hover:ring-white/25",
 )
 
@@ -78,14 +78,10 @@ function CardVisual({
     <>
       <div className="card-shine absolute inset-0 overflow-hidden bg-black">
         {item.imageUrl ? (
-          <Image
+          <img
             src={item.imageUrl}
             alt={item.title}
-            fill
-            priority={index < 4}
-            className="object-cover transition-opacity duration-300 group-hover:opacity-90"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            unoptimized={item.kind === "video"}
+            className="object-cover transition-opacity duration-300 group-hover:opacity-90 h-full w-full"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950" />
@@ -109,12 +105,12 @@ function CardVisual({
 
       <span
         className={cn(
-          "absolute right-2 bottom-2 z-[2] flex size-7 items-center justify-center rounded-full",
+          "absolute bottom-[50%] right-[50%] translate-y-[50%] translate-x-[50%] z-[2] flex size-[100px] items-center justify-center rounded-full",
           "bg-black/55 text-white backdrop-blur-sm",
         )}
         aria-hidden
       >
-        <Icon className={cn("size-4", usePlayIcon && "ml-0.5 fill-current")} />
+        <Icon className={cn("size-[50px]", usePlayIcon && "ml-0.5 fill-current")} />
       </span>
     </>
   )
@@ -170,27 +166,38 @@ function VideoPlayerDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl gap-0 overflow-hidden p-0 sm:max-w-4xl">
+      <DialogContent
+        overlayClassName="bg-black"
+        className={cn(
+          "fixed inset-0 top-0 left-0 z-50 flex h-svh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden",
+          "rounded-none border-0 bg-black p-0 shadow-none",
+          "[&>button]:top-4 [&>button]:right-4 [&>button]:text-white [&>button]:opacity-80 [&>button]:hover:opacity-100",
+        )}
+      >
         {video ? (
           <>
-            <DialogHeader className="space-y-1 px-6 pt-6 pr-12 text-left">
-              <DialogTitle>{video.title}</DialogTitle>
+            <DialogHeader className="shrink-0 space-y-1 border-b border-white/10 px-6 py-4 pr-14 text-left">
+              <DialogTitle className="text-white">{video.title}</DialogTitle>
               {video.subtitle ? (
-                <DialogDescription>{video.subtitle}</DialogDescription>
+                <DialogDescription className="text-white/65">
+                  {video.subtitle}
+                </DialogDescription>
               ) : null}
             </DialogHeader>
-            <div className="px-6 pt-4 pb-6">
+
+            <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-4 md:px-8 md:py-6">
               <VideoPlayerEmbed
                 videoUrl={video.videoUrl}
                 title={video.title}
-                className="max-w-none"
+                className="aspect-video h-auto max-h-full w-full max-w-full rounded-xl ring-white/10"
               />
-              {video.description ? (
-                <p className="text-muted-foreground mt-4 text-sm whitespace-pre-line">
-                  {video.description}
-                </p>
-              ) : null}
             </div>
+
+            {video.description ? (
+              <p className="text-white/70 shrink-0 border-t border-white/10 px-6 py-4 text-sm whitespace-pre-line">
+                {video.description}
+              </p>
+            ) : null}
           </>
         ) : null}
       </DialogContent>
@@ -214,13 +221,13 @@ export function EventContentGrid({ items, title }: EventContentGridProps) {
 
   return (
     <>
-      <section className="px-4 pb-8 md:px-2">
+      <section className="px-4 pb-2 md:px-2">
         {title ? (
           <h2 className="text-muted-foreground mx-auto mb-4 text-sm font-medium tracking-wide uppercase">
             {title}
           </h2>
         ) : null}
-        <div className="mx-auto grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-3 lg:gap-4">
+        <div className="mx-auto grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-2 lg:gap-4">
           {items.map((item, index) => (
             <ContentGridCard
               key={`${item.kind}-${item.id}`}

@@ -117,7 +117,7 @@ export function PageHeader({
       className={cn(
         "mb-8 overflow-hidden rounded-2xl",
         glassPanel("border-white/20 p-0"),
-        "sm:min-h-[280px]",
+        "sm:min-h-[350px]",
         className,
       )}
     >
@@ -135,13 +135,13 @@ export function PageHeader({
           <HeroTitleBlock title={title} subtitle={subtitle} variant="mobile" />
 
           {description ? (
-            <p className="text-muted-foreground mb-4 max-w-2xl text-sm break-words whitespace-pre-line sm:mb-0 sm:mt-8 sm:text-base">
+            <p className="text-muted-foreground mb-4 max-w-2xl text-sm md:text-2xl break-words whitespace-pre-line sm:mb-0 sm:mt-8 sm:text-base">
               {description}
             </p>
           ) : null}
         </div>
 
-        <div className="group relative hidden w-full shrink-0 self-stretch overflow-hidden sm:block sm:w-[min(60%,640px)]">
+        <div className="group relative hidden w-full shrink-0 self-stretch overflow-hidden sm:block sm:w-[min(70%,840px)]">
           <img
             src={bgImageUrl}
             alt=""

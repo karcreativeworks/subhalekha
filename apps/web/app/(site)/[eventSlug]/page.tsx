@@ -87,7 +87,9 @@ export default async function EventHomePage({ params }: EventHomePageProps) {
 
       <GalleryBlocksShowcase eventSlug={event.eventSlug} blocks={galleryBlocks} />
 
+
       <EventContentGrid items={videoGridItems} />
+
 
       {/* <div className="grid gap-4 sm:grid-cols-2">
         <section className={cn(glassPanel("rounded-2xl p-6"))}>
