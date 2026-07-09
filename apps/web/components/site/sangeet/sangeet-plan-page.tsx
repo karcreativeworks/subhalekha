@@ -211,7 +211,7 @@ function PerformanceSongsAndPerformers({
         {row.performerCount}{" "}
         {row.performerCount === 1 ? "performer" : "performers"}
         {": "}
-        <span className="select-none blur-[5px]" aria-hidden>
+        <span className="break-words whitespace-pre-wrap text-sky-100/90">
           {row.performerNames}
         </span>
       </p>
@@ -527,7 +527,7 @@ export function SangeetPlanPage() {
             Performance plan
           </h1>
           <p className="mt-2 max-w-xl text-sm md:text-base text-white/85 sm:text-base text-right">
-            Add your act below. Names stay hidden on this list until show day.
+            Add your act below and see who is performing when.
           </p>
         </div>
       </section>
@@ -548,7 +548,7 @@ export function SangeetPlanPage() {
               Scheduled performances
             </h2>
             <p className="mt-1 text-sm text-sky-200/65">
-              Performer names are blurred for privacy. Newest entries appear first.
+              Performer names are shown on the public schedule.
             </p>
           </div>
 

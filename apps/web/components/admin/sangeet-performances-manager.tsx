@@ -229,7 +229,7 @@ export function SangeetPerformancesManager() {
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Reorder acts for the public plan page and edit any performance
-            details. Performer names are visible here only.
+            details.
           </p>
         </div>
         <Button variant="outline" asChild>
