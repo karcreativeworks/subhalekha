@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb"
+import { ObjectId, type Collection } from "mongodb"
 
 import type { SangeetPerformance } from "@/app/types/sangeet-performance"
 import type { SangeetPerformanceListResponse } from "@/app/types/sangeet-performance"
@@ -29,11 +29,44 @@ function sortSangeetPerformances(docs: SangeetPerformance[]) {
   return [...docs].sort(compareSangeetPerformances)
 }
 
+async function ensureSangeetPerformanceSortOrders(
+  collection: Collection<SangeetPerformance>,
+) {
+  const docs = await collection.find({}).toArray()
+  const withoutOrder = docs.filter((doc) => typeof doc.sortOrder !== "number")
+  if (withoutOrder.length === 0) {
+    return
+  }
+
+  const withOrder = docs
+    .filter((doc) => typeof doc.sortOrder === "number")
+    .sort((a, b) => (a.sortOrder as number) - (b.sortOrder as number))
+
+  const maxOrder = withOrder.at(-1)?.sortOrder ?? -1
+  const unordered = withoutOrder.sort(
+    (a, b) =>
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  )
+
+  await collection.bulkWrite(
+    unordered.map((doc, index) => ({
+      updateOne: {
+        filter: { _id: doc._id! },
+        update: { $set: { sortOrder: maxOrder + 1 + index } },
+      },
+    })),
+  )
+}
+
 export async function getNextSangeetPerformanceSortOrder() {
   const db = await getDb()
-  const latest = await db
-    .collection<SangeetPerformance>(SANGEET_PERFORMANCES_COLLECTION)
-    .find({ sortOrder: { $exists: true } })
+  const collection = db.collection<SangeetPerformance>(
+    SANGEET_PERFORMANCES_COLLECTION,
+  )
+  await ensureSangeetPerformanceSortOrders(collection)
+
+  const latest = await collection
+    .find({})
     .sort({ sortOrder: -1 })
     .limit(1)
     .project({ sortOrder: 1 })
@@ -44,10 +77,11 @@ export async function getNextSangeetPerformanceSortOrder() {
 
 export async function listSangeetPerformances() {
   const db = await getDb()
-  const docs = await db
-    .collection<SangeetPerformance>(SANGEET_PERFORMANCES_COLLECTION)
-    .find({})
-    .toArray()
+  const collection = db.collection<SangeetPerformance>(
+    SANGEET_PERFORMANCES_COLLECTION,
+  )
+  await ensureSangeetPerformanceSortOrders(collection)
+  const docs = await collection.find({}).toArray()
 
   return sortSangeetPerformances(docs).map(toSangeetPerformancePublic)
 }
@@ -60,6 +94,7 @@ export async function listSangeetPerformancesPaginated(
   const collection = db.collection<SangeetPerformance>(
     SANGEET_PERFORMANCES_COLLECTION,
   )
+  await ensureSangeetPerformanceSortOrders(collection)
 
   const docs = await collection.find({}).toArray()
   const sorted = sortSangeetPerformances(docs)
