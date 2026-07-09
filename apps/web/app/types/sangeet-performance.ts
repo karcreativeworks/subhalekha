@@ -24,6 +24,8 @@ export interface SangeetPerformance {
   _id?: ObjectId | string
   /** Secret token for public edit/delete from the submitting browser. */
   submissionToken?: string
+  /** Admin-defined show order (lower = earlier). */
+  sortOrder?: number
   title: string
   performerCount: number
   performerNames: string
@@ -37,6 +39,7 @@ export interface SangeetPerformance {
 
 export interface SangeetPerformancePublic {
   id: string
+  sortOrder: number
   title: string
   performerCount: number
   performerNames: string
@@ -76,4 +79,8 @@ export interface SangeetPerformanceListResponse {
   pageSize: number
   total: number
   totalPages: number
+}
+
+export interface ReorderSangeetPerformancesRequest {
+  orderedIds: string[]
 }

@@ -32,6 +32,7 @@ export function toSangeetPerformancePublic(
 
   return {
     id,
+    sortOrder: typeof doc.sortOrder === "number" ? doc.sortOrder : 0,
     title: doc.title,
     performerCount: doc.performerCount,
     performerNames: coercePerformerNames(doc.performerNames),

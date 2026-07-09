@@ -4,8 +4,11 @@ import Link from "next/link"
 import { useState } from "react"
 import useSWR from "swr"
 import {
+  ArrowDown,
+  ArrowUp,
   Clock,
   ExternalLink,
+  GripVertical,
   Loader2,
   Mic2,
   Music,
@@ -90,6 +93,7 @@ export function SangeetPerformancesManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [reorderingId, setReorderingId] = useState<string | null>(null)
 
   const openEdit = (performance: SangeetPerformancePublic) => {
     setEditingId(performance.id)
@@ -125,7 +129,7 @@ export function SangeetPerformancesManager() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title: form.title.trim(),
-            performerCount: form.performerCount,
+            performerCount,
             performerNames: form.performerNames.trim(),
             performanceType: form.performanceType,
             gang: form.gang,
@@ -174,6 +178,48 @@ export function SangeetPerformancesManager() {
     }
   }
 
+  const handleMove = async (index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction
+    if (nextIndex < 0 || nextIndex >= performances.length) return
+
+    const next = [...performances]
+    const [removed] = next.splice(index, 1)
+    if (!removed) return
+
+    next.splice(nextIndex, 0, removed)
+    const movingId = removed.id
+    setReorderingId(movingId)
+
+    await mutate(next, { revalidate: false })
+
+    try {
+      const response = await adminFetch(
+        "/api/sangeet-performances/reorder",
+        clientId,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderedIds: next.map((row) => row.id) }),
+        },
+      )
+
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string }
+        throw new Error(data.error ?? "Reorder failed")
+      }
+
+      const updated = (await response.json()) as SangeetPerformancePublic[]
+      await mutate(updated, { revalidate: false })
+    } catch (error) {
+      await mutate()
+      toast.error(
+        error instanceof Error ? error.message : "Failed to reorder performances",
+      )
+    } finally {
+      setReorderingId(null)
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -182,8 +228,8 @@ export function SangeetPerformancesManager() {
             Sangeet performances
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Edit or remove acts submitted on the public plan page. Names are
-            visible here only.
+            Reorder acts for the public plan page and edit any performance
+            details. Performer names are visible here only.
           </p>
         </div>
         <Button variant="outline" asChild>
@@ -207,6 +253,7 @@ export function SangeetPerformancesManager() {
           <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-muted/40 text-left">
               <tr>
+                <th className="px-4 py-3 font-medium">Order</th>
                 <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Performers</th>
@@ -220,8 +267,51 @@ export function SangeetPerformancesManager() {
             <tbody>
               {performances.map((row, index) => (
                 <tr key={row.id} className="border-t">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <GripVertical className="text-muted-foreground size-4 shrink-0" />
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="size-7"
+                          disabled={
+                            index === 0 ||
+                            reorderingId !== null
+                          }
+                          onClick={() => void handleMove(index, -1)}
+                          aria-label="Move up"
+                        >
+                          <ArrowUp className="size-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="size-7"
+                          disabled={
+                            index === performances.length - 1 ||
+                            reorderingId !== null
+                          }
+                          onClick={() => void handleMove(index, 1)}
+                          aria-label="Move down"
+                        >
+                          <ArrowDown className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </td>
                   <td className="text-muted-foreground px-4 py-3">{index + 1}</td>
-                  <td className="px-4 py-3 font-medium">{row.title}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <button
+                      type="button"
+                      className="hover:text-primary text-left transition-colors"
+                      onClick={() => openEdit(row)}
+                    >
+                      {row.title}
+                    </button>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-muted-foreground text-xs">

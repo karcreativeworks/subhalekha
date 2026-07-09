@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import type { SangeetPerformance } from "@/app/types/sangeet-performance"
 import {
+  getNextSangeetPerformanceSortOrder,
   listSangeetPerformancesPaginated,
   SANGEET_PERFORMANCES_COLLECTION,
 } from "@/lib/db/sangeet-performances"
@@ -48,9 +49,11 @@ export async function POST(request: NextRequest) {
 
     const now = new Date()
     const submissionToken = createSubmissionToken()
+    const sortOrder = await getNextSangeetPerformanceSortOrder()
     const record: SangeetPerformance = {
       ...parsed.data,
       submissionToken,
+      sortOrder,
       createdAt: now,
       updatedAt: now,
     }
